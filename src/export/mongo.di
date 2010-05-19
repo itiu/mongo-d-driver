@@ -26,11 +26,11 @@ else
 {
     alias int socklen_t;
 }
-static 
+static
 {
     int zero = 0;
 }
-static 
+static
 {
     int one = 1;
 }
@@ -326,11 +326,11 @@ mongo_op_get_more = 2005,
 mongo_op_delete = 2006,
 mongo_op_kill_cursors = 2007,
 }
-static 
+static
 {
     void looping_write(mongo_connection* conn, void* buf, int len);
 }
-static 
+static
 {
     void looping_read(mongo_connection* conn, void* buf, int len);
 }
@@ -361,13 +361,13 @@ mm.head.responseTo = responseTo;
 mm.head.op = op;
 return mm;
 }
-static 
+static
 {
     int mongo_connect_helper(mongo_connection* conn);
 }
 void MONGO_INIT_EXCEPTION(mongo_exception_context* exception_ptr);
 mongo_conn_return mongo_connect(mongo_connection* conn, mongo_connection_options* options);
-static 
+static
 {
     void swap_repl_pair(mongo_connection* conn)
 {
@@ -428,11 +428,11 @@ return mongo_disconnect(conn);
 bson_bool_t mongo_cursor_get_more(mongo_cursor* cursor);
 bson_bool_t mongo_cursor_next(mongo_cursor* cursor);
 void mongo_cursor_destroy(mongo_cursor* cursor);
-static const 
+static const
 {
     int MONGO_INDEX_UNIQUE = 1;
 }
-static const 
+static const
 {
     int MONGO_INDEX_DROP_DUPS = 2;
 }
@@ -475,7 +475,7 @@ void mongo_cmd_reset_error(mongo_connection* conn, char* db)
 {
 mongo_simple_int_command(conn,db,"reseterror",1,null);
 }
-static 
+static
 {
     bson_bool_t mongo_cmd_get_error_helper(mongo_connection* conn, char* db, bson* realout, char* cmdtype);
 }
@@ -488,11 +488,11 @@ bson_bool_t mongo_cmd_get_last_error(mongo_connection* conn, char* db, bson* _ou
 return mongo_cmd_get_error_helper(conn,db,_out,"getlasterror");
 }
 bson_bool_t mongo_cmd_ismaster(mongo_connection* conn, bson* realout);
-static 
+static
 {
     void digest2hex(mongo_md5_byte_t[16] digest, char[33] hex_digest);
 }
-static 
+static
 {
     void mongo_pass_digest(char* user, char* pass, char[33] hex_digest)
 {
@@ -506,11 +506,11 @@ mongo_md5_finish(&st,digest);
 digest2hex(digest,hex_digest);
 }
 }
-static const 
+static const
 {
     int MONGO_UPDATE_UPSERT = 1;
 }
-static const 
+static const
 {
     int MONGO_UPDATE_MULTI = 2;
 }

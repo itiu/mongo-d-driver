@@ -12,7 +12,7 @@ struct mongo_md5_state_t
     mongo_md5_word_t[4] abcd;
     mongo_md5_byte_t[64] buf;
 }
-const 
+const
 {
     mongo_md5_word_t T_MASK = 0;
 }
@@ -52,9 +52,9 @@ byte* in_v = cast(byte*)&v;
 return res;
 }
 }
-final 
+final
 {
-    static 
+    static
 {
     private
 {
@@ -62,11 +62,11 @@ final
 }
 }
 }
-static 
+static
 {
     protected
 {
-    final 
+    final
 {
     void littleEndian32(ubyte* input, uint* output);
 }
@@ -76,11 +76,11 @@ private
 {
     void mongo_md5_process(mongo_md5_state_t* pms, mongo_md5_byte_t* data);
 }
-static 
+static
 {
     protected
 {
-    final 
+    final
 {
     uint rotateLeft(uint x, uint n)
 {
@@ -91,7 +91,7 @@ return x << n | x >> 32 - n;
 }
 protected
 {
-    static 
+    static
 {
     uint h(uint x, uint y, uint z)
 {
@@ -101,7 +101,7 @@ return x ^ y ^ z;
 }
 protected
 {
-    static 
+    static
 {
     uint f(uint x, uint y, uint z)
 {
@@ -111,7 +111,7 @@ return x & y | ~x & z;
 }
 private
 {
-    static 
+    static
 {
     uint g(uint x, uint y, uint z)
 {
@@ -121,7 +121,7 @@ return x & z | y & ~z;
 }
 private
 {
-    static 
+    static
 {
     uint i(uint x, uint y, uint z)
 {
@@ -131,7 +131,7 @@ return y ^ (x | ~z);
 }
 private
 {
-    static 
+    static
 {
     void ff(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
@@ -143,7 +143,7 @@ a += b;
 }
 private
 {
-    static 
+    static
 {
     void gg(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
@@ -155,7 +155,7 @@ a += b;
 }
 private
 {
-    static 
+    static
 {
     void hh(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
@@ -167,7 +167,7 @@ a += b;
 }
 private
 {
-    static 
+    static
 {
     void ii(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
