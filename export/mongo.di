@@ -1,4 +1,4 @@
-// D import file generated from 'mongo.d'
+// D import file generated from 'src\mongo.d'
 module mongo;
 import md5;
 import bson;
@@ -18,13 +18,57 @@ private
 {
     import tango.io.Stdout;
 }
-version (windows)
+private
 {
-    alias int socklen_t;
+    import tango.core.BitManip;
 }
-else
+version (Win32)
 {
-    alias int socklen_t;
+    pragma(lib, "ws2_32.lib");
+    extern (Windows) 
+{
+    private
+{
+    typedef int socket_t = ~0;
+}
+    int send(int s, void* buf, int len, int flags);
+    int recv(int s, void* buf, int len, int flags);
+    int setsockopt(socket_t s, int level, int optname, void* optval, int optlen);
+    uint inet_addr(char* cp);
+    int connect(socket_t s, sockaddr* name, socklen_t namelen);
+    socket_t socket(int af, int type, int protocol);
+}
+    private
+{
+    typedef int socklen_t;
+}
+}
+version (linux)
+{
+    private
+{
+    typedef int socket_t = ~0;
+}
+    extern (C) 
+{
+    int socket(int __domain, int __type, int __protocol);
+}
+    private
+{
+    typedef int socklen_t;
+}
+    extern (C) 
+{
+    in_addr_t inet_addr(char* __cp);
+}
+    extern (C) 
+{
+    int connect(socket_t __fd, sockaddr* __addr, socklen_t __len);
+}
+    extern (C) 
+{
+    int setsockopt(int __fd, int __level, int __optname, void* __optval, socklen_t __optlen);
+}
 }
 static
 {
@@ -162,10 +206,6 @@ extern (C)
 {
     void longjmp(__jmp_buf_tag[1] __env, int __val);
 }
-extern (C) 
-{
-    uint16_t htons(uint16_t __hostshort);
-}
 struct mongo_exception_context
 {
     jmp_buf base_handler;
@@ -191,7 +231,7 @@ struct mongo_connection
     mongo_connection_options* right_opts;
     sockaddr_in sa;
     socklen_t addressSize;
-    int sock;
+    socket_t sock;
     bson_bool_t connected;
     mongo_exception_context exception;
 }
@@ -217,27 +257,22 @@ struct mongo_cursor
     bson current;
 }
 alias int ssize_t;
-extern (C) 
+version (linux)
+{
+    extern (C) 
 {
     ssize_t send(int __fd, void* __buf, size_t __n, int __flags);
 }
-extern (C) 
+    extern (C) 
 {
     ssize_t recv(int __fd, void* __buf, size_t __n, int __flags);
+}
 }
 extern (C) 
 {
     int setjmp(jmp_buf __env);
 }
 alias uint32_t in_addr_t;
-extern (C) 
-{
-    in_addr_t inet_addr(char* __cp);
-}
-extern (C) 
-{
-    int socket(int __domain, int __type, int __protocol);
-}
 enum socket_type 
 {
 SOCK_STREAM = 1,
@@ -257,14 +292,6 @@ extern (C)
     ushort sa_family;
     ubyte[14] sa_data;
 }
-}
-extern (C) 
-{
-    int connect(int __fd, sockaddr* __addr, socklen_t __len);
-}
-extern (C) 
-{
-    int setsockopt(int __fd, int __level, int __optname, void* __optval, socklen_t __optlen);
 }
 enum 
 {
@@ -520,3 +547,41 @@ private
     void MONGO_THROW_GENERIC(mongo_connection* conn, mongo_exception_type type_in);
 }
 bson_bool_t mongo_cmd_authenticate(mongo_connection* conn, char* db, char* user, char* pass);
+version (BigEndian)
+{
+    ushort htons(ushort x)
+{
+return x;
+}
+    uint htonl(uint x)
+{
+return x;
+}
+}
+else
+{
+    version (LittleEndian)
+{
+    import tango.core.BitManip;
+    ushort htons(ushort x)
+{
+return cast(ushort)(x >> 8 | x << 8);
+}
+    uint htonl(uint x)
+{
+return bswap(x);
+}
+}
+else
+{
+    static assert(0);
+}
+}
+ushort ntohs(ushort x)
+{
+return htons(x);
+}
+uint ntohl(uint x)
+{
+return htonl(x);
+}

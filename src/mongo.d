@@ -17,41 +17,109 @@ module mongo;
  *    limitations under the License.
  */
 
+/*
+Copyright (C) 2004 Christopher E. Miller
+
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any source distribution.
+
+*/
+
+/*******************************************************************************
+
+copyright:      Copyright (c) 2004 Kris Bell. All rights reserved
+
+license:        BSD style: $(LICENSE)
+
+version:        Initial release: March 2004
+
+author:         Christopher Miller
+                Kris Bell
+                Anders F Bjorklund (Darwin patches)
+
+
+The original code has been modified in several ways:
+        
+1) It has been altered to fit within the Tango environment, meaning
+   that certain original classes have been reorganized, and/or have
+   subclassed Tango base-classes. For example, the original Socket
+   class has been wrapped with three distinct subclasses, and now
+   derives from class tango.io.Resource.
+
+2) All exception instances now subclass the Tango IOException.
+
+3) Construction of new Socket instances via accept() is now
+   overloadable.
+
+4) Constants and enums have been moved within a class boundary to
+   ensure explicit namespace usage.
+
+5) changed Socket.select() to loop if it was interrupted.
+
+
+All changes within the main body of code all marked with "Tango:"
+
+For a good tutorial on socket-programming I highly recommend going
+here: http://www.ecst.csuchico.edu/~beej/guide/net/
+
+*******************************************************************************/
+
+
+
 import md5;
 import bson;
+
 private import tango.stdc.stdlib;
 private import tango.stdc.string;
 private import tango.stdc.stdio;
 private import tango.io.Stdout;
+private import tango.core.BitManip;
 
+version (Win32)
+{
+   pragma(lib, "ws2_32.lib");
 
-version(windows)
-{
-	//#include <windows.h>
-	//#include <winsock.h>
-	alias int socklen_t;
-} else
-{
-	//#include <arpa/inet.h>
-	//#include <sys/types.h>
-	//#include <sys/socket.h>
-	//#include <netinet/in.h>
-	//#include <netinet/tcp.h>
-	alias int socklen_t; // __STD_TYPE __U32_TYPE __socklen_t;
+   extern  (Windows)
+   {
+	  private typedef int socket_t = ~0;
+	   
+      int send(int s, void* buf, int len, int flags);
+      int recv(int s, void* buf, int len, int flags);
+      int setsockopt(socket_t s, int level, int optname, void* optval, int optlen);
+      uint inet_addr(char* cp);
+      int connect(socket_t s, sockaddr* name, socklen_t namelen);
+      socket_t socket(int af, int type, int protocol);
+   }
+
+   private typedef int socklen_t; // __STD_TYPE __U32_TYPE __socklen_t;
 }
 
-/*
- #include <stdlib.h>
- #include <stdio.h>
- #include <errno.h>
- #include <string.h>
- #include <stdlib.h>
+version (linux)
+{
+    private typedef int socket_t = ~0;
+    
+    extern (C) int socket (int __domain, int __type, int __protocol);	
+    private typedef int socklen_t; // __STD_TYPE __U32_TYPE __socklen_t;
+    extern (C) in_addr_t inet_addr (char *__cp);
+    extern (C) int connect (socket_t __fd, sockaddr * __addr, socklen_t __len);
+    extern (C) int setsockopt (int __fd, int __level, int __optname, void *__optval, socklen_t __optlen);
+}
 
- #ifndef _WIN32
- #include <unistd.h>
- #endif
- */
-/* only need one of these */
 
 static int zero = 0;
 static int one = 1;
@@ -200,7 +268,7 @@ alias __jmp_buf_tag[1] jmp_buf;
 
 extern (C) void longjmp (__jmp_buf_tag __env[1], int __val);
 
-extern (C) uint16_t htons (uint16_t __hostshort);
+//extern (C) uint16_t htons (uint16_t __hostshort);
 
 
 struct mongo_exception_context
@@ -231,7 +299,7 @@ struct mongo_connection
 	mongo_connection_options* right_opts; /* unused with single server */
 	sockaddr_in sa;
 	socklen_t addressSize;
-	int sock;
+	socket_t sock;
 	bson_bool_t connected;
 	mongo_exception_context exception;
 };
@@ -262,18 +330,17 @@ struct mongo_cursor
 
 alias int ssize_t;
 
+version (linux)
+{
 extern(C)
 	ssize_t send(int __fd, void* __buf, size_t __n, int __flags);
 
 extern (C) ssize_t recv (int __fd, void *__buf, size_t __n, int __flags);
+}
 
 extern (C) int setjmp (jmp_buf __env);
 
 alias uint32_t in_addr_t;
-
-extern (C) in_addr_t inet_addr (char *__cp);
-
-extern (C) int socket (int __domain, int __type, int __protocol);
 
 enum socket_type
 {
@@ -305,12 +372,6 @@ struct sockaddr
   ushort sa_family;
   ubyte sa_data[14];
 };
-
-
-extern (C) int connect (int __fd, sockaddr * __addr, socklen_t __len);
-
-
-extern (C) int setsockopt (int __fd, int __level, int __optname, void *__optval, socklen_t __optlen);
 
 
 /* Standard well-defined IP protocols.  */
@@ -1447,3 +1508,49 @@ bson_bool_t mongo_cmd_authenticate(mongo_connection* conn, char* db, char* user,
 	return success;
 }
 
+
+version(BigEndian)
+{
+        ushort htons(ushort x)
+        {
+                return x;
+        }
+                
+ 
+        uint htonl(uint x)
+        {
+                return x;
+        }
+}
+else version(LittleEndian)
+{
+        import tango.core.BitManip;
+
+
+        ushort htons(ushort x)
+        {
+                return cast(ushort) ((x >> 8) | (x << 8));
+        }
+                
+
+        uint htonl(uint x)
+        {
+                return bswap(x);
+        }
+}
+else
+{
+        static assert(0);
+}
+        
+
+ushort ntohs(ushort x)
+{
+        return htons(x);
+}
+        
+
+uint ntohl(uint x)
+{
+        return htonl(x);
+}

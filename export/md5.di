@@ -1,11 +1,21 @@
-// D import file generated from 'md5.d'
+// D import file generated from 'src\md5.d'
 module md5;
 private
 {
     import tango.stdc.string;
 }
-alias uint mongo_md5_word_t;
-alias ubyte mongo_md5_byte_t;
+private
+{
+    import tango.core.BitManip;
+}
+private
+{
+    typedef uint mongo_md5_word_t;
+}
+private
+{
+    typedef ubyte mongo_md5_byte_t;
+}
 struct mongo_md5_state_t
 {
     mongo_md5_word_t[2] count;
@@ -36,20 +46,6 @@ S41 = 6,
 S42 = 10,
 S43 = 15,
 S44 = 21,
-}
-}
-private
-{
-    uint bswap(uint v)
-{
-uint res;
-byte* in_res = cast(byte*)&res;
-byte* in_v = cast(byte*)&v;
-*(in_res + 0) = *(in_v + 3);
-*(in_res + 1) = *(in_v + 2);
-*(in_res + 2) = *(in_v + 1);
-*(in_res + 3) = *(in_v + 0);
-return res;
 }
 }
 final

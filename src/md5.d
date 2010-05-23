@@ -1,7 +1,5 @@
 module md5;
 
-private import tango.stdc.string;
-
 /*
  Copyright (C) 1999, 2000, 2002 Aladdin Enterprises.  All rights reserved.
 
@@ -61,8 +59,12 @@ private import tango.stdc.string;
 // BYTE_ORDER_big_endian 
 // BYTE_ORDER_little_endian
 // BYTE_ORDER_unknown
-alias uint mongo_md5_word_t; /* 32-bit byte */
-alias ubyte mongo_md5_byte_t; /* 8-bit byte */
+
+private import tango.stdc.string;
+private import tango.core.BitManip;
+
+private typedef uint mongo_md5_word_t; /* 32-bit byte */
+private typedef ubyte mongo_md5_byte_t; /* 8-bit byte */
 
 /* Define the state of the MD5 Algorithm. */
 struct mongo_md5_state_t
@@ -94,11 +96,13 @@ private enum
 	S44 = 21
 };
 
+
 /**
  * Swaps bytes in a 4 byte uint end-to-end, i.e. byte 0 becomes
  * byte 3, byte 1 becomes byte 2, byte 2 becomes byte 1, byte 3
  * becomes byte 0.
  */
+/*
 private uint bswap(uint v)
 {
 	uint res;
@@ -110,6 +114,7 @@ private uint bswap(uint v)
 	*(in_res + 3) = *(in_v + 0);
 	return res;
 }
+*/
 
 final static private void swap32(void* dst, uint bytes)
 {
@@ -124,6 +129,7 @@ final static private void swap32(void* dst, uint bytes)
 	}
 }
 
+
 static protected final void littleEndian32(ubyte* input, uint* output)
 {
 	output = cast(uint*) input;
@@ -132,12 +138,13 @@ static protected final void littleEndian32(ubyte* input, uint* output)
 		swap32(output.ptr, output.length * uint.sizeof);
 }
 
+
 private void mongo_md5_process(mongo_md5_state_t* pms, mongo_md5_byte_t* data)
 {
 	uint a, b, c, d;
 	uint[16] x;
 
-	littleEndian32(data, x.ptr);
+	littleEndian32(cast (ubyte*) data, x.ptr);
 
 	a = pms.abcd[0];
 	b = pms.abcd[1];

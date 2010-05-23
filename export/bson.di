@@ -1,4 +1,4 @@
-// D import file generated from 'bson.d'
+// D import file generated from 'src\bson.d'
 module bson;
 private
 {
