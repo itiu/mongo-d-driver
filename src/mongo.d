@@ -579,7 +579,7 @@ static int mongo_connect_helper(mongo_connection* conn)
 	conn.addressSize = conn.sa.sizeof;
 
 	/* connect */
-	conn.sock = socket(AF_INET, socket_type.SOCK_STREAM, 0);
+	conn.sock = cast (socket_t)socket(AF_INET, socket_type.SOCK_STREAM, 0);
 	if(conn.sock <= 0)
 	{
 		return mongo_conn_return.mongo_conn_no_socket;
