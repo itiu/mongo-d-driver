@@ -1,18 +1,18 @@
-// D import file generated from 'src\bson.d'
+// D import file generated from 'src/bson.d'
 module bson;
-private
+private 
 {
     import tango.stdc.string;
 }
-private
+private 
 {
     import tango.stdc.stdlib;
 }
-private
+private 
 {
     import tango.stdc.time;
 }
-private
+private 
 {
     import tango.stdc.stdio;
 }
@@ -107,11 +107,11 @@ bson_swap_endian32(cast(char*)outp,cast(char*)inp);
 bson_swap_endian64(cast(char*)outp,cast(char*)inp);
 }
 }
-const
+const 
 {
     int initialBufferSize = 128;
 }
-static
+static 
 {
     int zero = 0;
 }
@@ -139,7 +139,7 @@ free(b.data);
 b.data = null;
 b.owned = 0;
 }
-static
+static 
 {
     char hexbyte(char hex);
 }
@@ -297,7 +297,7 @@ b.buf = null;
 b.cur = null;
 b.finished = 1;
 }
-static
+static 
 {
     bson_buffer* bson_append_estart(bson_buffer* b, int type, char* name, int dataSize);
 }
@@ -346,7 +346,7 @@ void* p = malloc(size);
 bson_fatal_msg(!!p,"malloc() failed");
 return p;
 }
-static
+static 
 {
     bson_err_handler err_handler = null;
 }
@@ -361,7 +361,7 @@ void bson_fatal(int ok)
 bson_fatal_msg(ok,"");
 }
 void bson_fatal_msg(int ok, char* msg);
-const
+const 
 {
     char[4][1000] bson_numstrs;
 }

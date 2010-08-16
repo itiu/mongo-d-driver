@@ -1,18 +1,18 @@
-// D import file generated from 'src\md5.d'
+// D import file generated from 'src/md5.d'
 module md5;
-private
+private 
 {
     import tango.stdc.string;
 }
-private
+private 
 {
     import tango.core.BitManip;
 }
-private
+private 
 {
     typedef uint mongo_md5_word_t;
 }
-private
+private 
 {
     typedef ubyte mongo_md5_byte_t;
 }
@@ -22,11 +22,11 @@ struct mongo_md5_state_t
     mongo_md5_word_t[4] abcd;
     mongo_md5_byte_t[64] buf;
 }
-const
+const 
 {
     mongo_md5_word_t T_MASK = 0;
 }
-private
+private 
 {
     enum 
 {
@@ -48,35 +48,35 @@ S43 = 15,
 S44 = 21,
 }
 }
-final
+final 
 {
-    static
+    static 
 {
-    private
+    private 
 {
     void swap32(void* dst, uint bytes);
 }
 }
 }
-static
+static 
 {
-    protected
+    protected 
 {
-    final
+    final 
 {
     void littleEndian32(ubyte* input, uint* output);
 }
 }
 }
-private
+private 
 {
     void mongo_md5_process(mongo_md5_state_t* pms, mongo_md5_byte_t* data);
 }
-static
+static 
 {
-    protected
+    protected 
 {
-    final
+    final 
 {
     uint rotateLeft(uint x, uint n)
 {
@@ -85,9 +85,9 @@ return x << n | x >> 32 - n;
 }
 }
 }
-protected
+protected 
 {
-    static
+    static 
 {
     uint h(uint x, uint y, uint z)
 {
@@ -95,9 +95,9 @@ return x ^ y ^ z;
 }
 }
 }
-protected
+protected 
 {
-    static
+    static 
 {
     uint f(uint x, uint y, uint z)
 {
@@ -105,9 +105,9 @@ return x & y | ~x & z;
 }
 }
 }
-private
+private 
 {
-    static
+    static 
 {
     uint g(uint x, uint y, uint z)
 {
@@ -115,9 +115,9 @@ return x & z | y & ~z;
 }
 }
 }
-private
+private 
 {
-    static
+    static 
 {
     uint i(uint x, uint y, uint z)
 {
@@ -125,9 +125,9 @@ return y ^ (x | ~z);
 }
 }
 }
-private
+private 
 {
-    static
+    static 
 {
     void ff(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
@@ -137,9 +137,9 @@ a += b;
 }
 }
 }
-private
+private 
 {
-    static
+    static 
 {
     void gg(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
@@ -149,9 +149,9 @@ a += b;
 }
 }
 }
-private
+private 
 {
-    static
+    static 
 {
     void hh(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
@@ -161,9 +161,9 @@ a += b;
 }
 }
 }
-private
+private 
 {
-    static
+    static 
 {
     void ii(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {

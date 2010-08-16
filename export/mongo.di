@@ -1,24 +1,24 @@
-// D import file generated from 'src\mongo.d'
+// D import file generated from 'src/mongo.d'
 module mongo;
 import md5;
 import bson;
-private
+private 
 {
     import tango.stdc.stdlib;
 }
-private
+private 
 {
     import tango.stdc.string;
 }
-private
+private 
 {
     import tango.stdc.stdio;
 }
-private
+private 
 {
     import tango.io.Stdout;
 }
-private
+private 
 {
     import tango.core.BitManip;
 }
@@ -27,7 +27,7 @@ version (Win32)
     pragma(lib, "ws2_32.lib");
     extern (Windows) 
 {
-    private
+    private 
 {
     typedef int socket_t = ~0;
 }
@@ -38,14 +38,14 @@ version (Win32)
     int connect(socket_t s, sockaddr* name, socklen_t namelen);
     socket_t socket(int af, int type, int protocol);
 }
-    private
+    private 
 {
     typedef int socklen_t;
 }
 }
 version (linux)
 {
-    private
+    private 
 {
     typedef int socket_t = ~0;
 }
@@ -53,7 +53,7 @@ version (linux)
 {
     int socket(int __domain, int __type, int __protocol);
 }
-    private
+    private 
 {
     typedef int socklen_t;
 }
@@ -70,11 +70,11 @@ version (linux)
     int setsockopt(int __fd, int __level, int __optname, void* __optval, socklen_t __optlen);
 }
 }
-static
+static 
 {
     int zero = 0;
 }
-static
+static 
 {
     int one = 1;
 }
@@ -109,11 +109,11 @@ extern (C)
 {
     union in_addr
 {
-    private
+    private 
 {
     union _S_un_t
 {
-    private
+    private 
 {
     struct _S_un_b_t
 {
@@ -124,7 +124,7 @@ extern (C)
 }
 }
     _S_un_b_t S_un_b;
-    private
+    private 
 {
     struct _S_un_w_t
 {
@@ -353,11 +353,11 @@ mongo_op_get_more = 2005,
 mongo_op_delete = 2006,
 mongo_op_kill_cursors = 2007,
 }
-static
+static 
 {
     void looping_write(mongo_connection* conn, void* buf, int len);
 }
-static
+static 
 {
     void looping_read(mongo_connection* conn, void* buf, int len);
 }
@@ -388,13 +388,13 @@ mm.head.responseTo = responseTo;
 mm.head.op = op;
 return mm;
 }
-static
+static 
 {
     int mongo_connect_helper(mongo_connection* conn);
 }
 void MONGO_INIT_EXCEPTION(mongo_exception_context* exception_ptr);
 mongo_conn_return mongo_connect(mongo_connection* conn, mongo_connection_options* options);
-static
+static 
 {
     void swap_repl_pair(mongo_connection* conn)
 {
@@ -455,11 +455,11 @@ return mongo_disconnect(conn);
 bson_bool_t mongo_cursor_get_more(mongo_cursor* cursor);
 bson_bool_t mongo_cursor_next(mongo_cursor* cursor);
 void mongo_cursor_destroy(mongo_cursor* cursor);
-static const
+static const 
 {
     int MONGO_INDEX_UNIQUE = 1;
 }
-static const
+static const 
 {
     int MONGO_INDEX_DROP_DUPS = 2;
 }
@@ -502,7 +502,7 @@ void mongo_cmd_reset_error(mongo_connection* conn, char* db)
 {
 mongo_simple_int_command(conn,db,"reseterror",1,null);
 }
-static
+static 
 {
     bson_bool_t mongo_cmd_get_error_helper(mongo_connection* conn, char* db, bson* realout, char* cmdtype);
 }
@@ -515,11 +515,11 @@ bson_bool_t mongo_cmd_get_last_error(mongo_connection* conn, char* db, bson* _ou
 return mongo_cmd_get_error_helper(conn,db,_out,"getlasterror");
 }
 bson_bool_t mongo_cmd_ismaster(mongo_connection* conn, bson* realout);
-static
+static 
 {
     void digest2hex(mongo_md5_byte_t[16] digest, char[33] hex_digest);
 }
-static
+static 
 {
     void mongo_pass_digest(char* user, char* pass, char[33] hex_digest)
 {
@@ -533,16 +533,16 @@ mongo_md5_finish(&st,digest);
 digest2hex(digest,hex_digest);
 }
 }
-static const
+static const 
 {
     int MONGO_UPDATE_UPSERT = 1;
 }
-static const
+static const 
 {
     int MONGO_UPDATE_MULTI = 2;
 }
 void mongo_cmd_add_user(mongo_connection* conn, char* db, char* user, char* pass);
-private
+private 
 {
     void MONGO_THROW_GENERIC(mongo_connection* conn, mongo_exception_type type_in);
 }
