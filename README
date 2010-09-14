@@ -1,2 +1,5 @@
-Bushenev Valeriy
-port mongo C driver to D
+This is port mongo C driver to D programming language.
+
+build with DMD 1.63 + tango 0.99.9
+
+ValeriyBushenev@gmail.com
