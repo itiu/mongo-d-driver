@@ -60,8 +60,11 @@ module md5;
 // BYTE_ORDER_little_endian
 // BYTE_ORDER_unknown
 
-private import tango.stdc.string;
-private import tango.core.BitManip;
+//private import tango.stdc.string;
+//private import tango.core.BitManip;
+private import std.c.stdlib;
+private import std.c.string;
+private import std.intrinsic;
 
 private typedef uint mongo_md5_word_t; /* 32-bit byte */
 private typedef ubyte mongo_md5_byte_t; /* 8-bit byte */

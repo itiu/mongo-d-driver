@@ -84,11 +84,14 @@ here: http://www.ecst.csuchico.edu/~beej/guide/net/
 import md5;
 import bson;
 
-private import tango.stdc.stdlib;
-private import tango.stdc.string;
-private import tango.stdc.stdio;
-private import tango.io.Stdout;
-private import tango.core.BitManip;
+//private import tango.stdc.stdlib;
+private import std.c.stdlib;
+private import std.c.string;
+private import std.intrinsic;
+//private import tango.stdc.string;
+//private import tango.stdc.stdio;
+//private import tango.io.Stdout;
+//private import tango.core.BitManip;
 
 version (Win32)
 {
@@ -1524,7 +1527,7 @@ version(BigEndian)
 }
 else version(LittleEndian)
 {
-        import tango.core.BitManip;
+//        import tango.core.BitManip;
 
 
         ushort htons(ushort x)

@@ -1,21 +1,13 @@
 // D import file generated from 'src/bson.d'
 module bson;
-private 
-{
-    import tango.stdc.string;
-}
-private 
-{
-    import tango.stdc.stdlib;
-}
-private 
-{
-    import tango.stdc.time;
-}
-private 
-{
-    import tango.stdc.stdio;
-}
+private import std.c.stdlib;
+
+private import std.c.string;
+
+private import std.date;
+
+private import std.c.stdio;
+
 alias int bson_bool_t;
 struct bson
 {
@@ -107,14 +99,10 @@ bson_swap_endian32(cast(char*)outp,cast(char*)inp);
 bson_swap_endian64(cast(char*)outp,cast(char*)inp);
 }
 }
-const 
-{
-    int initialBufferSize = 128;
-}
-static 
-{
-    int zero = 0;
-}
+const int initialBufferSize = 128;
+
+static int zero = 0;
+
 bson* bson_empty(bson* obj)
 {
 static char* data = "\x05\x00\x00\x00\x00";
@@ -139,10 +127,8 @@ free(b.data);
 b.data = null;
 b.owned = 0;
 }
-static 
-{
-    char hexbyte(char hex);
-}
+static char hexbyte(char hex);
+
 void bson_oid_from_string(bson_oid_t* oid, char* str);
 void bson_oid_to_string(bson_oid_t* oid, char* str);
 void bson_oid_gen(bson_oid_t* oid);
@@ -297,10 +283,8 @@ b.buf = null;
 b.cur = null;
 b.finished = 1;
 }
-static 
-{
-    bson_buffer* bson_append_estart(bson_buffer* b, int type, char* name, int dataSize);
-}
+static bson_buffer* bson_append_estart(bson_buffer* b, int type, char* name, int dataSize);
+
 bson_buffer* bson_append_int(bson_buffer* b, char* name, int i);
 bson_buffer* bson_append_long(bson_buffer* b, char* name, int64_t i);
 bson_buffer* bson_append_double(bson_buffer* b, char* name, double d);
@@ -346,10 +330,8 @@ void* p = malloc(size);
 bson_fatal_msg(!!p,"malloc() failed");
 return p;
 }
-static 
-{
-    bson_err_handler err_handler = null;
-}
+static bson_err_handler err_handler = null;
+
 bson_err_handler set_bson_err_handler(bson_err_handler func)
 {
 bson_err_handler old = err_handler;
@@ -361,10 +343,8 @@ void bson_fatal(int ok)
 bson_fatal_msg(ok,"");
 }
 void bson_fatal_msg(int ok, char* msg);
-const 
-{
-    char[4][1000] bson_numstrs;
-}
+const char[4][1000] bson_numstrs;
+
 void bson_numstr(char* str, int i)
 {
 if (i < 1000)

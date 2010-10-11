@@ -1,9 +1,14 @@
 module bson;
 
-private import tango.stdc.string;
-private import tango.stdc.stdlib;
-private import tango.stdc.time;
-private import tango.stdc.stdio;
+//private import tango.stdc.string;
+//private import tango.stdc.stdlib;
+//private import tango.stdc.time;
+//private import tango.stdc.stdio;
+private import std.c.stdlib;
+private import std.c.string;
+private import std.date;
+private import std.c.stdio;
+
 
 /* bson.c */
 
@@ -273,7 +278,7 @@ void bson_oid_gen(bson_oid_t* oid)
 	static int incr = 0;
 	static int fuzz = 0;
 	int i = incr++; /*TODO make atomic*/
-	int t = time(null);
+	int t = cast(int)toInteger (getLocalTZA());
 
 	/* TODO rand sucks. find something better */
 	if(!fuzz)
