@@ -79,7 +79,9 @@ return y ^ (x | ~z);
 }
 
 
-private static void ff(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+version (D1)
+{
+    private static void ff(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
 a += f(b,c,d) + x + ac;
 a = rotateLeft(a,s);
@@ -87,7 +89,21 @@ a += b;
 }
 
 
-private static void gg(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+}
+version (D2)
+{
+    private static void ff(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+{
+a += f(b,c,d) + x + ac;
+a = rotateLeft(a,s);
+a += b;
+}
+
+
+}
+version (D1)
+{
+    private static void gg(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
 a += g(b,c,d) + x + ac;
 a = rotateLeft(a,s);
@@ -95,7 +111,21 @@ a += b;
 }
 
 
-private static void hh(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+}
+version (D2)
+{
+    private static void gg(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+{
+a += g(b,c,d) + x + ac;
+a = rotateLeft(a,s);
+a += b;
+}
+
+
+}
+version (D1)
+{
+    private static void hh(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
 a += h(b,c,d) + x + ac;
 a = rotateLeft(a,s);
@@ -103,7 +133,21 @@ a += b;
 }
 
 
-private static void ii(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+}
+version (D2)
+{
+    private static void hh(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+{
+a += h(b,c,d) + x + ac;
+a = rotateLeft(a,s);
+a += b;
+}
+
+
+}
+version (D1)
+{
+    private static void ii(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
 a += i(b,c,d) + x + ac;
 a = rotateLeft(a,s);
@@ -111,6 +155,18 @@ a += b;
 }
 
 
+}
+version (D2)
+{
+    private static void ii(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+{
+a += i(b,c,d) + x + ac;
+a = rotateLeft(a,s);
+a += b;
+}
+
+
+}
 void mongo_md5_init(mongo_md5_state_t* pms)
 {
 pms.count[0] = (pms.count[1] = 0);

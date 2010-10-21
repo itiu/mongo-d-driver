@@ -105,7 +105,7 @@ static int zero = 0;
 
 bson* bson_empty(bson* obj)
 {
-static char* data = "\x05\x00\x00\x00\x00";
+static char* data = cast(char*)"\x05\x00\x00\x00\x00";
 return bson_init(obj,data,0);
 }
 void bson_copy(bson* _out, bson* _in);
@@ -214,7 +214,7 @@ return bson_iterator_long_raw(i);
 }
 time_t bson_iterator_time_t(bson_iterator* i)
 {
-return bson_iterator_date(i) / 1000;
+return cast(int)bson_iterator_date(i) / 1000;
 }
 int bson_iterator_bin_len(bson_iterator* i)
 {
@@ -327,7 +327,7 @@ bson_buffer* bson_append_finish_object(bson_buffer* b);
 void* bson_malloc(int size)
 {
 void* p = malloc(size);
-bson_fatal_msg(!!p,"malloc() failed");
+bson_fatal_msg(!!p,cast(char*)"malloc() failed");
 return p;
 }
 static bson_err_handler err_handler = null;
@@ -340,7 +340,7 @@ return old;
 }
 void bson_fatal(int ok)
 {
-bson_fatal_msg(ok,"");
+bson_fatal_msg(ok,cast(char*)"");
 }
 void bson_fatal_msg(int ok, char* msg);
 const char[4][1000] bson_numstrs;

@@ -162,7 +162,7 @@ static int zero = 0;
 
 bson* bson_empty(bson* obj)
 {
-	static char* data = "\005\0\0\0\0";
+	static char* data = cast(char*)"\005\0\0\0\0";
 	return bson_init(obj, data, 0);
 }
 
@@ -256,7 +256,7 @@ void bson_oid_from_string(bson_oid_t* oid, char* str)
 	int i;
 	for(i = 0; i < 12; i++)
 	{
-		oid.bytes[i] = (hexbyte(str[2 * i]) << 4) | hexbyte(str[2 * i + 1]);
+		oid.bytes[i] = cast(char)(hexbyte(str[2 * i]) << 4) | hexbyte(str[2 * i + 1]);
 	}
 }
 
@@ -442,7 +442,7 @@ bson_type bson_iterator_next(bson_iterator* i)
 
 		default:
 		{
-			char msg[] = "unknown type: 000000000000";
+			char msg[] = cast(char[])"unknown type: 000000000000";
 			bson_numstr(cast(char*) (&msg + 14), cast(int) (i.cur[0]));
 			bson_fatal_msg(0, cast(char*) &msg);
 			return cast(bson_type) 0;
@@ -614,7 +614,7 @@ bson_date_t bson_iterator_date(bson_iterator* i)
 
 time_t bson_iterator_time_t(bson_iterator* i)
 {
-	return bson_iterator_date(i) / 1000;
+	return cast (int) bson_iterator_date(i) / 1000;
 }
 
 int bson_iterator_bin_len(bson_iterator* i)
@@ -699,7 +699,7 @@ bson_buffer* bson_ensure_space(bson_buffer* b, int bytesNeeded)
 	int new_size;
 
 	if(b.finished)
-		bson_fatal_msg(!!b.buf, "trying to append to finished buffer");
+		bson_fatal_msg(!!b.buf, cast (char*) "trying to append to finished buffer");
 
 	if(pos + bytesNeeded <= b.bufSize)
 		return b;
@@ -707,7 +707,7 @@ bson_buffer* bson_ensure_space(bson_buffer* b, int bytesNeeded)
 	new_size = cast(int) (1.5 * (b.bufSize + bytesNeeded));
 	b.buf = cast(char*) realloc(cast(void*) b.buf, new_size);
 	if(!b.buf)
-		bson_fatal_msg(!!b.buf, "realloc() failed");
+		bson_fatal_msg(!!b.buf, cast (char*) "realloc() failed");
 
 	b.bufSize = new_size;
 	b.cur += b.buf - orig;
@@ -958,7 +958,7 @@ bson_buffer* bson_append_finish_object(bson_buffer* b)
 void* bson_malloc(int size)
 {
 	void* p = malloc(size);
-	bson_fatal_msg(!!p, "malloc() failed");
+	bson_fatal_msg(!!p, cast(char*)"malloc() failed");
 	return p;
 }
 
@@ -973,7 +973,7 @@ bson_err_handler set_bson_err_handler(bson_err_handler func)
 
 void bson_fatal(int ok)
 {
-	bson_fatal_msg(ok, "");
+	bson_fatal_msg(ok, cast(char*)"");
 }
 
 void bson_fatal_msg(int ok, char* msg)

@@ -415,7 +415,7 @@ int sl = strlen(db);
 char* ns = cast(char*)bson_malloc(sl + 5 + 1);
 bson_bool_t success;
 strcpy(ns,db);
-strcpy(ns + sl,".$cmd");
+strcpy(ns + sl,cast(char*)".$cmd");
 success = mongo_find_one(conn,ns,command,bson_empty(&fields),_out);
 free(ns);
 return success;
@@ -424,25 +424,25 @@ bson_bool_t mongo_simple_int_command(mongo_connection* conn, char* db, char* cmd
 bson_bool_t mongo_simple_str_command(mongo_connection* conn, char* db, char* cmdstr, char* arg, bson* realout);
 bson_bool_t mongo_cmd_drop_db(mongo_connection* conn, char* db)
 {
-return mongo_simple_int_command(conn,db,"dropDatabase",1,null);
+return mongo_simple_int_command(conn,db,cast(char*)"dropDatabase",1,null);
 }
 bson_bool_t mongo_cmd_drop_collection(mongo_connection* conn, char* db, char* collection, bson* _out)
 {
-return mongo_simple_str_command(conn,db,"drop",collection,_out);
+return mongo_simple_str_command(conn,db,cast(char*)"drop",collection,_out);
 }
 void mongo_cmd_reset_error(mongo_connection* conn, char* db)
 {
-mongo_simple_int_command(conn,db,"reseterror",1,null);
+mongo_simple_int_command(conn,db,cast(char*)"reseterror",1,null);
 }
 static bson_bool_t mongo_cmd_get_error_helper(mongo_connection* conn, char* db, bson* realout, char* cmdtype);
 
 bson_bool_t mongo_cmd_get_prev_error(mongo_connection* conn, char* db, bson* _out)
 {
-return mongo_cmd_get_error_helper(conn,db,_out,"getpreverror");
+return mongo_cmd_get_error_helper(conn,db,_out,cast(char*)"getpreverror");
 }
 bson_bool_t mongo_cmd_get_last_error(mongo_connection* conn, char* db, bson* _out)
 {
-return mongo_cmd_get_error_helper(conn,db,_out,"getlasterror");
+return mongo_cmd_get_error_helper(conn,db,_out,cast(char*)"getlasterror");
 }
 bson_bool_t mongo_cmd_ismaster(mongo_connection* conn, bson* realout);
 static void digest2hex(mongo_md5_byte_t[16] digest, char[33] hex_digest);
@@ -453,7 +453,7 @@ mongo_md5_state_t st;
 mongo_md5_byte_t[16] digest;
 mongo_md5_init(&st);
 mongo_md5_append(&st,cast(mongo_md5_byte_t*)user,strlen(user));
-mongo_md5_append(&st,cast(mongo_md5_byte_t*)":mongo:",7);
+mongo_md5_append(&st,cast(mongo_md5_byte_t*)cast(char*)":mongo:",7);
 mongo_md5_append(&st,cast(mongo_md5_byte_t*)pass,strlen(pass));
 mongo_md5_finish(&st,digest);
 digest2hex(digest,hex_digest);

@@ -577,7 +577,7 @@ static int mongo_connect_helper(mongo_connection* conn)
 
 	memset(conn.sa.sin_zero.ptr, 0, conn.sa.sin_zero.sizeof);
 	conn.sa.sin_family = AF_INET;
-	conn.sa.sin_port = htons(conn.left_opts.port);
+	conn.sa.sin_port = htons(cast(ushort)conn.left_opts.port);
 	conn.sa.sin_addr.s_addr = inet_addr(conn.left_opts.host.ptr);
 	conn.addressSize = conn.sa.sizeof;
 
@@ -613,9 +613,9 @@ void MONGO_INIT_EXCEPTION (mongo_exception_context* exception_ptr)
 	{
         t = cast (mongo_exception_type)res_set_jmp;
             switch(t){ 
-                case mongo_exception_type.MONGO_EXCEPT_NETWORK: bson_fatal_msg(0, "network error"); 
-                case mongo_exception_type.MONGO_EXCEPT_FIND_ERR: bson_fatal_msg(0, "error in find"); 
-                default: bson_fatal_msg(0, "mongodb:unknown exception"); 
+                case mongo_exception_type.MONGO_EXCEPT_NETWORK: bson_fatal_msg(0, cast(char*)"network error"); 
+                case mongo_exception_type.MONGO_EXCEPT_FIND_ERR: bson_fatal_msg(0, cast(char*)"error in find"); 
+                default: bson_fatal_msg(0, cast(char*)"mongodb:unknown exception"); 
             } 
             }
     }
@@ -636,7 +636,7 @@ mongo_conn_return mongo_connect(mongo_connection* conn, mongo_connection_options
 	}
 	else
 	{
-		strcpy(conn.left_opts.host.ptr, "127.0.0.1".ptr);
+		strcpy(conn.left_opts.host.ptr, cast(char*)"127.0.0.1".ptr);
 		conn.left_opts.port = 27017;
 	}
 
@@ -859,7 +859,7 @@ mongo_cursor* mongo_find(mongo_connection* conn, char* ns, bson* query, bson* fi
 	if(fields)
 		data = mongo_data_append(data, fields.data, bson_size(fields));
 
-	bson_fatal_msg((data == (cast(char*) mm) + mm.head.len), "query building fail!");
+	bson_fatal_msg((data == (cast(char*) mm) + mm.head.len), cast(char*)"query building fail!");
 
 	mongo_message_send(conn, mm);
 //Stdout.format("mongo_find ###5").newline;
@@ -937,10 +937,10 @@ int64_t mongo_count(mongo_connection* conn, char* db, char* ns, bson* query)
 	int64_t count = -1;
 
 	bson_buffer_init(&bb);
-	bson_append_string(&bb, "count", ns);
+	bson_append_string(&bb, cast(char*)"count", ns);
 	if(query && bson_size(query) > 5)
 		/* not empty */
-		bson_append_bson(&bb, "query", query);
+		bson_append_bson(&bb, cast(char*)"query", query);
 	bson_from_buffer(&cmd, &bb);
 
 	{
@@ -955,7 +955,7 @@ int64_t mongo_count(mongo_connection* conn, char* db, char* ns, bson* query)
 				if(mongo_run_command(conn, db, &cmd, &_out))
 				{
 					bson_iterator it;
-					if(bson_find(&it, &_out, "n"))
+					if(bson_find(&it, &_out, cast(char*)"n"))
 						count = bson_iterator_long(&it);
 				}
 			} while(conn.exception.caught = 0 , conn.exception.caught);
@@ -1171,18 +1171,18 @@ bson_bool_t mongo_create_index(mongo_connection* conn, char* ns, bson* key, int 
 	name[254] = '\0';
 
 	bson_buffer_init(&bb);
-	bson_append_bson(&bb, "key", key);
-	bson_append_string(&bb, "ns", ns);
-	bson_append_string(&bb, "name", name.ptr);
+	bson_append_bson(&bb, cast(char*)"key", key);
+	bson_append_string(&bb, cast(char*)"ns", ns);
+	bson_append_string(&bb, cast(char*)"name", name.ptr);
 	if(options & MONGO_INDEX_UNIQUE)
-		bson_append_bool(&bb, "unique", 1);
+		bson_append_bool(&bb, cast(char*)"unique", 1);
 	if(options & MONGO_INDEX_DROP_DUPS)
-		bson_append_bool(&bb, "dropDups", 1);
+		bson_append_bool(&bb, cast(char*)"dropDups", 1);
 
 	bson_from_buffer(&b, &bb);
 
 	strncpy(idxns.ptr, ns, 1024 - 16);
-	strcpy(strchr(idxns.ptr, '.'), ".system.indexes");
+	strcpy(strchr(idxns.ptr, '.'), cast(char*)".system.indexes");
 	mongo_insert(conn, idxns.ptr, &b);
 	bson_destroy(&b);
 
@@ -1213,7 +1213,7 @@ bson_bool_t mongo_run_command(mongo_connection* conn, char* db, bson* command, b
 	bson_bool_t success;
 
 	strcpy(ns, db);
-	strcpy(ns + sl, ".$cmd");
+	strcpy(ns + sl, cast(char*)".$cmd");
 
 	success = mongo_find_one(conn, ns, command, bson_empty(&fields), _out);
 	free(ns);
@@ -1234,7 +1234,7 @@ bson_bool_t mongo_simple_int_command(mongo_connection* conn, char* db, char* cmd
 	if(mongo_run_command(conn, db, &cmd, &_out))
 	{
 		bson_iterator it;
-		if(bson_find(&it, &_out, "ok"))
+		if(bson_find(&it, &_out, cast(char*)"ok"))
 			success = bson_iterator_bool(&it);
 	}
 
@@ -1262,7 +1262,7 @@ bson_bool_t mongo_simple_str_command(mongo_connection* conn, char* db, char* cmd
 	if(mongo_run_command(conn, db, &cmd, &_out))
 	{
 		bson_iterator it;
-		if(bson_find(&it, &_out, "ok"))
+		if(bson_find(&it, &_out, cast(char*)"ok"))
 			success = bson_iterator_bool(&it);
 	}
 
@@ -1278,17 +1278,17 @@ bson_bool_t mongo_simple_str_command(mongo_connection* conn, char* db, char* cmd
 
 bson_bool_t mongo_cmd_drop_db(mongo_connection* conn, char* db)
 {
-	return mongo_simple_int_command(conn, db, "dropDatabase", 1, null);
+	return mongo_simple_int_command(conn, db, cast(char*)"dropDatabase", 1, null);
 }
 
 bson_bool_t mongo_cmd_drop_collection(mongo_connection* conn, char* db, char* collection, bson* _out)
 {
-	return mongo_simple_str_command(conn, db, "drop", collection, _out);
+	return mongo_simple_str_command(conn, db, cast(char*)"drop", collection, _out);
 }
 
 void mongo_cmd_reset_error(mongo_connection* conn, char* db)
 {
-	mongo_simple_int_command(conn, db, "reseterror", 1, null);
+	mongo_simple_int_command(conn, db, cast(char*)"reseterror", 1, null);
 }
 
 static bson_bool_t mongo_cmd_get_error_helper(mongo_connection* conn, char* db, bson* realout, char* cmdtype)
@@ -1299,7 +1299,7 @@ static bson_bool_t mongo_cmd_get_error_helper(mongo_connection* conn, char* db, 
 	if(mongo_simple_int_command(conn, db, cmdtype, 1, &_out))
 	{
 		bson_iterator it;
-		haserror = (bson_find(&it, &_out, "err") != bson_type.bson_null);
+		haserror = (bson_find(&it, &_out, cast(char*)"err") != bson_type.bson_null);
 	}
 
 	if(realout)
@@ -1312,12 +1312,12 @@ static bson_bool_t mongo_cmd_get_error_helper(mongo_connection* conn, char* db, 
 
 bson_bool_t mongo_cmd_get_prev_error(mongo_connection* conn, char* db, bson* _out)
 {
-	return mongo_cmd_get_error_helper(conn, db, _out, "getpreverror");
+	return mongo_cmd_get_error_helper(conn, db, _out, cast(char*)"getpreverror");
 }
 
 bson_bool_t mongo_cmd_get_last_error(mongo_connection* conn, char* db, bson* _out)
 {
-	return mongo_cmd_get_error_helper(conn, db, _out, "getlasterror");
+	return mongo_cmd_get_error_helper(conn, db, _out, cast(char*)"getlasterror");
 }
 
 bson_bool_t mongo_cmd_ismaster(mongo_connection* conn, bson* realout)
@@ -1328,10 +1328,10 @@ bson_bool_t mongo_cmd_ismaster(mongo_connection* conn, bson* realout)
 	
 	bson_bool_t ismaster = 0;
 
-	if(mongo_simple_int_command(conn, "admin", "ismaster", 1, &_out))
+	if(mongo_simple_int_command(conn, cast(char*)"admin", cast(char*)"ismaster", 1, &_out))
 	{
 		bson_iterator it;
-		bson_find(&it, &_out, "ismaster");
+		bson_find(&it, &_out, cast(char*)"ismaster");
 		ismaster = bson_iterator_bool(&it);
 	}
 
@@ -1362,7 +1362,7 @@ static void mongo_pass_digest(char* user, char* pass, char hex_digest[33])
 
 	mongo_md5_init(&st);
 	mongo_md5_append(&st, cast(mongo_md5_byte_t*) user, strlen(user));
-	mongo_md5_append(&st, cast(mongo_md5_byte_t*) ":mongo:", 7);
+	mongo_md5_append(&st, cast(mongo_md5_byte_t*) cast(char*)":mongo:", 7);
 	mongo_md5_append(&st, cast(mongo_md5_byte_t*) pass, strlen(pass));
 	mongo_md5_finish(&st, digest);
 	digest2hex(digest, hex_digest);
@@ -1377,20 +1377,20 @@ void mongo_cmd_add_user(mongo_connection* conn, char* db, char* user, char* pass
 	bson user_obj;
 	bson pass_obj;
 	char hex_digest[33];
-	char* ns = cast(char*) malloc(strlen(db) + strlen(".system.users") + 1);
+	char* ns = cast(char*) malloc(strlen(db) + strlen(cast(char*)".system.users") + 1);
 
 	strcpy(ns, db);
-	strcpy(ns + strlen(db), ".system.users");
+	strcpy(ns + strlen(db), cast(char*)".system.users");
 
 	mongo_pass_digest(user, pass, hex_digest);
 
 	bson_buffer_init(&bb);
-	bson_append_string(&bb, "user", user);
+	bson_append_string(&bb, cast(char*)"user", user);
 	bson_from_buffer(&user_obj, &bb);
 
 	bson_buffer_init(&bb);
-	bson_append_start_object(&bb, "$set");
-	bson_append_string(&bb, "pwd", hex_digest.ptr);
+	bson_append_start_object(&bb, cast(char*)"$set");
+	bson_append_string(&bb, cast(char*)"pwd", hex_digest.ptr);
 	bson_append_finish_object(&bb);
 	bson_from_buffer(&pass_obj, &bb);
 
@@ -1444,10 +1444,10 @@ bson_bool_t mongo_cmd_authenticate(mongo_connection* conn, char* db, char* user,
 	mongo_md5_byte_t digest[16];
 	char hex_digest[33];
 
-	if(mongo_simple_int_command(conn, db, "getnonce", 1, &from_db))
+	if(mongo_simple_int_command(conn, db, cast(char*)"getnonce", 1, &from_db))
 	{
 		bson_iterator it;
-		bson_find(&it, &from_db, "nonce");
+		bson_find(&it, &from_db, cast(char*)"nonce");
 		nonce = bson_iterator_string(&it);
 	}
 	else
@@ -1465,10 +1465,10 @@ bson_bool_t mongo_cmd_authenticate(mongo_connection* conn, char* db, char* user,
 	digest2hex(digest, hex_digest);
 
 	bson_buffer_init(&bb);
-	bson_append_int(&bb, "authenticate", 1);
-	bson_append_string(&bb, "user", user);
-	bson_append_string(&bb, "nonce", nonce);
-	bson_append_string(&bb, "key", hex_digest.ptr);
+	bson_append_int(&bb, cast(char*)"authenticate", 1);
+	bson_append_string(&bb, cast(char*)"user", user);
+	bson_append_string(&bb, cast(char*)"nonce", nonce);
+	bson_append_string(&bb, cast(char*)"key", hex_digest.ptr);
 	bson_from_buffer(&auth_cmd, &bb);
 
 	bson_destroy(&from_db);
@@ -1485,7 +1485,7 @@ bson_bool_t mongo_cmd_authenticate(mongo_connection* conn, char* db, char* user,
 				if(mongo_run_command(conn, db, &auth_cmd, &from_db))
 				{
 					bson_iterator it;
-					if(bson_find(&it, &from_db, "ok"))
+					if(bson_find(&it, &from_db, cast(char*)"ok"))
 						success = bson_iterator_bool(&it);
 				}
 			} while(conn.exception.caught = 0 , conn.exception.caught);

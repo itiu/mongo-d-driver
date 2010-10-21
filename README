@@ -1,5 +1,5 @@
 This is port mongo C driver to D programming language.
 
-build with DMD 1.63 + tango 0.99.9
+build with DMD 1.64, 2.49
 
 ValeriyBushenev@gmail.com
