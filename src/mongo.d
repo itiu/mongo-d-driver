@@ -79,19 +79,22 @@ here: http://www.ecst.csuchico.edu/~beej/guide/net/
 
 *******************************************************************************/
 
-
-
 import md5;
 import bson;
 
-//private import tango.stdc.stdlib;
 private import std.c.stdlib;
 private import std.c.string;
 private import std.intrinsic;
-//private import tango.stdc.string;
-//private import tango.stdc.stdio;
-//private import tango.io.Stdout;
-//private import tango.core.BitManip;
+
+version (D2)
+{
+    alias const char const_char;
+}
+version (D1)
+{
+    alias char const_char;
+}
+        
 
 version (Win32)
 {
@@ -1485,7 +1488,7 @@ bson_bool_t mongo_cmd_authenticate(mongo_connection* conn, char* db, char* user,
 				if(mongo_run_command(conn, db, &auth_cmd, &from_db))
 				{
 					bson_iterator it;
-					if(bson_find(&it, &from_db, cast(char*)"ok"))
+					if(bson_find(&it, &from_db, "ok"))
 						success = bson_iterator_bool(&it);
 				}
 			} while(conn.exception.caught = 0 , conn.exception.caught);

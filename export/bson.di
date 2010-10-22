@@ -8,6 +8,14 @@ private import std.date;
 
 private import std.c.stdio;
 
+version (D2)
+{
+    alias char const_char;
+}
+version (D1)
+{
+    alias char const_char;
+}
 alias int bson_bool_t;
 struct bson
 {
@@ -148,7 +156,7 @@ void bson_iterator_init(bson_iterator* i, char* bson)
 i.cur = bson + 4;
 i.first = 1;
 }
-bson_type bson_find(bson_iterator* it, bson* obj, char* name);
+bson_type bson_find(bson_iterator* it, bson* obj, const_char* name);
 bson_bool_t bson_iterator_more(bson_iterator* i)
 {
 return *i.cur;
@@ -283,46 +291,46 @@ b.buf = null;
 b.cur = null;
 b.finished = 1;
 }
-static bson_buffer* bson_append_estart(bson_buffer* b, int type, char* name, int dataSize);
+static bson_buffer* bson_append_estart(bson_buffer* b, int type, const_char* name, int dataSize);
 
-bson_buffer* bson_append_int(bson_buffer* b, char* name, int i);
-bson_buffer* bson_append_long(bson_buffer* b, char* name, int64_t i);
-bson_buffer* bson_append_double(bson_buffer* b, char* name, double d);
-bson_buffer* bson_append_bool(bson_buffer* b, char* name, bson_bool_t i);
-bson_buffer* bson_append_null(bson_buffer* b, char* name);
-bson_buffer* bson_append_undefined(bson_buffer* b, char* name);
-bson_buffer* bson_append_string_base(bson_buffer* b, char* name, char* value, bson_type type);
-bson_buffer* bson_append_string(bson_buffer* b, char* name, char* value)
+bson_buffer* bson_append_int(bson_buffer* b, const_char* name, int i);
+bson_buffer* bson_append_long(bson_buffer* b, const_char* name, int64_t i);
+bson_buffer* bson_append_double(bson_buffer* b, const_char* name, double d);
+bson_buffer* bson_append_bool(bson_buffer* b, const_char* name, bson_bool_t i);
+bson_buffer* bson_append_null(bson_buffer* b, const_char* name);
+bson_buffer* bson_append_undefined(bson_buffer* b, const_char* name);
+bson_buffer* bson_append_string_base(bson_buffer* b, const_char* name, char* value, bson_type type);
+bson_buffer* bson_append_string(bson_buffer* b, const_char* name, char* value)
 {
 return bson_append_string_base(b,name,value,bson_type.bson_string);
 }
-bson_buffer* bson_append_symbol(bson_buffer* b, char* name, char* value)
+bson_buffer* bson_append_symbol(bson_buffer* b, const_char* name, char* value)
 {
 return bson_append_string_base(b,name,value,bson_type.bson_symbol);
 }
-bson_buffer* bson_append_code(bson_buffer* b, char* name, char* value)
+bson_buffer* bson_append_code(bson_buffer* b, const_char* name, char* value)
 {
 return bson_append_string_base(b,name,value,bson_type.bson_code);
 }
-bson_buffer* bson_append_code_w_scope(bson_buffer* b, char* name, char* code, bson* _scope);
-bson_buffer* bson_append_binary(bson_buffer* b, char* name, char type, char* str, int len);
-bson_buffer* bson_append_oid(bson_buffer* b, char* name, bson_oid_t* oid);
-bson_buffer* bson_append_new_oid(bson_buffer* b, char* name)
+bson_buffer* bson_append_code_w_scope(bson_buffer* b, const_char* name, char* code, bson* _scope);
+bson_buffer* bson_append_binary(bson_buffer* b, const_char* name, char type, char* str, int len);
+bson_buffer* bson_append_oid(bson_buffer* b, const_char* name, bson_oid_t* oid);
+bson_buffer* bson_append_new_oid(bson_buffer* b, const_char* name)
 {
 bson_oid_t oid;
 bson_oid_gen(&oid);
 return bson_append_oid(b,name,&oid);
 }
-bson_buffer* bson_append_regex(bson_buffer* b, char* name, char* pattern, char* opts);
-bson_buffer* bson_append_bson(bson_buffer* b, char* name, bson* bson);
-bson_buffer* bson_append_element(bson_buffer* b, char* name_or_null, bson_iterator* elem);
-bson_buffer* bson_append_date(bson_buffer* b, char* name, bson_date_t millis);
-bson_buffer* bson_append_time_t(bson_buffer* b, char* name, time_t secs)
+bson_buffer* bson_append_regex(bson_buffer* b, const_char* name, char* pattern, char* opts);
+bson_buffer* bson_append_bson(bson_buffer* b, const_char* name, bson* bson);
+bson_buffer* bson_append_element(bson_buffer* b, const_char* name_or_null, bson_iterator* elem);
+bson_buffer* bson_append_date(bson_buffer* b, const_char* name, bson_date_t millis);
+bson_buffer* bson_append_time_t(bson_buffer* b, const_char* name, time_t secs)
 {
 return bson_append_date(b,name,cast(bson_date_t)secs * 1000);
 }
-bson_buffer* bson_append_start_object(bson_buffer* b, char* name);
-bson_buffer* bson_append_start_array(bson_buffer* b, char* name);
+bson_buffer* bson_append_start_object(bson_buffer* b, const_char* name);
+bson_buffer* bson_append_start_array(bson_buffer* b, const_char* name);
 bson_buffer* bson_append_finish_object(bson_buffer* b);
 void* bson_malloc(int size)
 {

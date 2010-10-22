@@ -1,14 +1,18 @@
 module bson;
 
-//private import tango.stdc.string;
-//private import tango.stdc.stdlib;
-//private import tango.stdc.time;
-//private import tango.stdc.stdio;
 private import std.c.stdlib;
 private import std.c.string;
 private import std.date;
 private import std.c.stdio;
 
+version (D2)
+{
+    alias const char const_char;
+}
+version (D1)
+{
+    alias char const_char;
+}
 
 /* bson.c */
 
@@ -365,12 +369,12 @@ void bson_iterator_init(bson_iterator* i, char* bson)
 	i.first = 1;
 }
 
-bson_type bson_find(bson_iterator* it, bson* obj, char* name)
+bson_type bson_find(bson_iterator* it, bson* obj, const_char* name)
 {
 	bson_iterator_init(it, obj.data);
 	while(bson_iterator_next(it))
 	{
-		if(strcmp(name, bson_iterator_key(it)) == 0)
+		if(strcmp(cast(char*)name, bson_iterator_key(it)) == 0)
 			break;
 	}
 	return bson_iterator_type(it);
@@ -738,22 +742,22 @@ void bson_buffer_destroy(bson_buffer* b)
 	b.finished = 1;
 }
 
-static bson_buffer* bson_append_estart(bson_buffer* b, int type, char* name,
-		int dataSize)
+static bson_buffer* bson_append_estart(bson_buffer* b, int type, const_char* name, int dataSize)
 {
-	int sl = strlen(name) + 1;
+	int sl = strlen(cast(char*)name) + 1;
 	if(!bson_ensure_space(b, 1 + sl + dataSize))
 		return null;
 	bson_append_byte(b, cast(char) type);
-	bson_append(b, name, sl);
+	bson_append(b, cast(char*)name, sl);
 	return b;
 }
+
 
 /* ----------------------------
  BUILDING TYPES
  ------------------------------ */
 
-bson_buffer* bson_append_int(bson_buffer* b, char* name, int i)
+bson_buffer* bson_append_int(bson_buffer* b, const_char* name, int i)
 {
 	if(!bson_append_estart(b, bson_type.bson_int, name, 4))
 		return null;
@@ -761,7 +765,7 @@ bson_buffer* bson_append_int(bson_buffer* b, char* name, int i)
 	return b;
 }
 
-bson_buffer* bson_append_long(bson_buffer* b, char* name, int64_t i)
+bson_buffer* bson_append_long(bson_buffer* b, const_char* name, int64_t i)
 {
 	if(!bson_append_estart(b, bson_type.bson_long, name, 8))
 		return null;
@@ -769,7 +773,7 @@ bson_buffer* bson_append_long(bson_buffer* b, char* name, int64_t i)
 	return b;
 }
 
-bson_buffer* bson_append_double(bson_buffer* b, char* name, double d)
+bson_buffer* bson_append_double(bson_buffer* b, const_char* name, double d)
 {
 	if(!bson_append_estart(b, bson_type.bson_double, name, 8))
 		return null;
@@ -777,7 +781,7 @@ bson_buffer* bson_append_double(bson_buffer* b, char* name, double d)
 	return b;
 }
 
-bson_buffer* bson_append_bool(bson_buffer* b, char* name, bson_bool_t i)
+bson_buffer* bson_append_bool(bson_buffer* b, const_char* name, bson_bool_t i)
 {
 	if(!bson_append_estart(b, bson_type.bson_bool, name, 1))
 		return null;
@@ -785,21 +789,21 @@ bson_buffer* bson_append_bool(bson_buffer* b, char* name, bson_bool_t i)
 	return b;
 }
 
-bson_buffer* bson_append_null(bson_buffer* b, char* name)
+bson_buffer* bson_append_null(bson_buffer* b, const_char* name)
 {
 	if(!bson_append_estart(b, bson_type.bson_null, name, 0))
 		return null;
 	return b;
 }
 
-bson_buffer* bson_append_undefined(bson_buffer* b, char* name)
+bson_buffer* bson_append_undefined(bson_buffer* b, const_char* name)
 {
 	if(!bson_append_estart(b, bson_type.bson_undefined, name, 0))
 		return null;
 	return b;
 }
 
-bson_buffer* bson_append_string_base(bson_buffer* b, char* name, char* value,
+bson_buffer* bson_append_string_base(bson_buffer* b, const_char* name, char* value,
 		bson_type type)
 {
 	int sl = strlen(value) + 1;
@@ -810,22 +814,22 @@ bson_buffer* bson_append_string_base(bson_buffer* b, char* name, char* value,
 	return b;
 }
 
-bson_buffer* bson_append_string(bson_buffer* b, char* name, char* value)
+bson_buffer* bson_append_string(bson_buffer* b, const_char* name, char* value)
 {
 	return bson_append_string_base(b, name, value, bson_type.bson_string);
 }
 
-bson_buffer* bson_append_symbol(bson_buffer* b, char* name, char* value)
+bson_buffer* bson_append_symbol(bson_buffer* b, const_char* name, char* value)
 {
 	return bson_append_string_base(b, name, value, bson_type.bson_symbol);
 }
 
-bson_buffer* bson_append_code(bson_buffer* b, char* name, char* value)
+bson_buffer* bson_append_code(bson_buffer* b, const_char* name, char* value)
 {
 	return bson_append_string_base(b, name, value, bson_type.bson_code);
 }
 
-bson_buffer* bson_append_code_w_scope(bson_buffer* b, char* name, char* code,
+bson_buffer* bson_append_code_w_scope(bson_buffer* b, const_char* name, char* code,
 		bson* _scope)
 {
 	int sl = strlen(code) + 1;
@@ -839,7 +843,7 @@ bson_buffer* bson_append_code_w_scope(bson_buffer* b, char* name, char* code,
 	return b;
 }
 
-bson_buffer* bson_append_binary(bson_buffer* b, char* name, char type,
+bson_buffer* bson_append_binary(bson_buffer* b, const_char* name, char type,
 		char* str, int len)
 {
 	if(!bson_append_estart(b, bson_type.bson_bindata, name, 4 + 1 + len))
@@ -850,7 +854,7 @@ bson_buffer* bson_append_binary(bson_buffer* b, char* name, char type,
 	return b;
 }
 
-bson_buffer* bson_append_oid(bson_buffer* b, char* name, bson_oid_t* oid)
+bson_buffer* bson_append_oid(bson_buffer* b, const_char* name, bson_oid_t* oid)
 {
 	if(!bson_append_estart(b, bson_type.bson_oid, name, 12))
 		return null;
@@ -858,14 +862,14 @@ bson_buffer* bson_append_oid(bson_buffer* b, char* name, bson_oid_t* oid)
 	return b;
 }
 
-bson_buffer* bson_append_new_oid(bson_buffer* b, char* name)
+bson_buffer* bson_append_new_oid(bson_buffer* b, const_char* name)
 {
 	bson_oid_t oid;
 	bson_oid_gen(&oid);
 	return bson_append_oid(b, name, &oid);
 }
 
-bson_buffer* bson_append_regex(bson_buffer* b, char* name, char* pattern,
+bson_buffer* bson_append_regex(bson_buffer* b, const_char* name, char* pattern,
 		char* opts)
 {
 	int plen = strlen(pattern) + 1;
@@ -877,7 +881,7 @@ bson_buffer* bson_append_regex(bson_buffer* b, char* name, char* pattern,
 	return b;
 }
 
-bson_buffer* bson_append_bson(bson_buffer* b, char* name, bson* bson)
+bson_buffer* bson_append_bson(bson_buffer* b, const_char* name, bson* bson)
 {
 	if(!bson_append_estart(b, bson_type.bson_object, name, bson_size(bson)))
 		return null;
@@ -885,7 +889,7 @@ bson_buffer* bson_append_bson(bson_buffer* b, char* name, bson* bson)
 	return b;
 }
 
-bson_buffer* bson_append_element(bson_buffer* b, char* name_or_null,
+bson_buffer* bson_append_element(bson_buffer* b, const_char* name_or_null,
 		bson_iterator* elem)
 {
 	bson_iterator next = *elem;
@@ -902,14 +906,14 @@ bson_buffer* bson_append_element(bson_buffer* b, char* name_or_null,
 	{
 		int data_size = size - 1 - strlen(bson_iterator_key(elem));
 		bson_append_estart(b, elem.cur[0], name_or_null, data_size);
-		bson_append(b, name_or_null, strlen(name_or_null));
+		bson_append(b, cast(void*)name_or_null, strlen(cast(char*)name_or_null));
 		bson_append(b, bson_iterator_value(elem), data_size);
 	}
 
 	return b;
 }
 
-bson_buffer* bson_append_date(bson_buffer* b, char* name, bson_date_t millis)
+bson_buffer* bson_append_date(bson_buffer* b, const_char* name, bson_date_t millis)
 {
 	if(!bson_append_estart(b, bson_type.bson_date, name, 8))
 		return null;
@@ -917,12 +921,12 @@ bson_buffer* bson_append_date(bson_buffer* b, char* name, bson_date_t millis)
 	return b;
 }
 
-bson_buffer* bson_append_time_t(bson_buffer* b, char* name, time_t secs)
+bson_buffer* bson_append_time_t(bson_buffer* b, const_char* name, time_t secs)
 {
 	return bson_append_date(b, name, cast(bson_date_t) secs * 1000);
 }
 
-bson_buffer* bson_append_start_object(bson_buffer* b, char* name)
+bson_buffer* bson_append_start_object(bson_buffer* b, const_char* name)
 {
 	if(!bson_append_estart(b, bson_type.bson_object, name, 5))
 		return null;
@@ -931,7 +935,7 @@ bson_buffer* bson_append_start_object(bson_buffer* b, char* name)
 	return b;
 }
 
-bson_buffer* bson_append_start_array(bson_buffer* b, char* name)
+bson_buffer* bson_append_start_array(bson_buffer* b, const_char* name)
 {
 	if(!bson_append_estart(b, bson_type.bson_array, name, 5))
 		return null;

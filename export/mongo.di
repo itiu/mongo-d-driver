@@ -8,6 +8,14 @@ private import std.c.string;
 
 private import std.intrinsic;
 
+version (D2)
+{
+    alias char const_char;
+}
+version (D1)
+{
+    alias char const_char;
+}
 version (Win32)
 {
     pragma(lib, "ws2_32.lib");
