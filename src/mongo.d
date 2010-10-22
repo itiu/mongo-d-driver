@@ -940,10 +940,10 @@ int64_t mongo_count(mongo_connection* conn, char* db, char* ns, bson* query)
 	int64_t count = -1;
 
 	bson_buffer_init(&bb);
-	bson_append_string(&bb, cast(char*)"count", ns);
+	bson_append_string(&bb, cast(char[])"count", ns);
 	if(query && bson_size(query) > 5)
 		/* not empty */
-		bson_append_bson(&bb, cast(char*)"query", query);
+		bson_append_bson(&bb, "query", query);
 	bson_from_buffer(&cmd, &bb);
 
 	{
@@ -1175,8 +1175,8 @@ bson_bool_t mongo_create_index(mongo_connection* conn, char* ns, bson* key, int 
 
 	bson_buffer_init(&bb);
 	bson_append_bson(&bb, cast(char*)"key", key);
-	bson_append_string(&bb, cast(char*)"ns", ns);
-	bson_append_string(&bb, cast(char*)"name", name.ptr);
+	bson_append_string(&bb, cast(char[])"ns", ns);
+	bson_append_string(&bb, cast(char[])"name", name.ptr);
 	if(options & MONGO_INDEX_UNIQUE)
 		bson_append_bool(&bb, cast(char*)"unique", 1);
 	if(options & MONGO_INDEX_DROP_DUPS)
@@ -1251,7 +1251,7 @@ bson_bool_t mongo_simple_int_command(mongo_connection* conn, char* db, char* cmd
 	return success;
 }
 
-bson_bool_t mongo_simple_str_command(mongo_connection* conn, char* db, char* cmdstr, char* arg, bson* realout)
+bson_bool_t mongo_simple_str_command(mongo_connection* conn, char* db, string cmdstr, char* arg, bson* realout)
 {
 	bson _out;
 	bson cmd;
@@ -1259,7 +1259,7 @@ bson_bool_t mongo_simple_str_command(mongo_connection* conn, char* db, char* cmd
 	bson_bool_t success = 0;
 
 	bson_buffer_init(&bb);
-	bson_append_string(&bb, cmdstr, arg);
+	bson_append_string(&bb, cast(char[])cmdstr, arg);
 	bson_from_buffer(&cmd, &bb);
 
 	if(mongo_run_command(conn, db, &cmd, &_out))
@@ -1286,7 +1286,7 @@ bson_bool_t mongo_cmd_drop_db(mongo_connection* conn, char* db)
 
 bson_bool_t mongo_cmd_drop_collection(mongo_connection* conn, char* db, char* collection, bson* _out)
 {
-	return mongo_simple_str_command(conn, db, cast(char*)"drop", collection, _out);
+	return mongo_simple_str_command(conn, db, "drop", collection, _out);
 }
 
 void mongo_cmd_reset_error(mongo_connection* conn, char* db)
@@ -1388,12 +1388,12 @@ void mongo_cmd_add_user(mongo_connection* conn, char* db, char* user, char* pass
 	mongo_pass_digest(user, pass, hex_digest);
 
 	bson_buffer_init(&bb);
-	bson_append_string(&bb, cast(char*)"user", user);
+	bson_append_string(&bb, cast(char[])"user", user);
 	bson_from_buffer(&user_obj, &bb);
 
 	bson_buffer_init(&bb);
-	bson_append_start_object(&bb, cast(char*)"$set");
-	bson_append_string(&bb, cast(char*)"pwd", hex_digest.ptr);
+	bson_append_start_object(&bb, "$set");
+	bson_append_string(&bb, cast(char[])"pwd", hex_digest.ptr);
 	bson_append_finish_object(&bb);
 	bson_from_buffer(&pass_obj, &bb);
 
@@ -1468,10 +1468,10 @@ bson_bool_t mongo_cmd_authenticate(mongo_connection* conn, char* db, char* user,
 	digest2hex(digest, hex_digest);
 
 	bson_buffer_init(&bb);
-	bson_append_int(&bb, cast(char*)"authenticate", 1);
-	bson_append_string(&bb, cast(char*)"user", user);
-	bson_append_string(&bb, cast(char*)"nonce", nonce);
-	bson_append_string(&bb, cast(char*)"key", hex_digest.ptr);
+	bson_append_int(&bb, "authenticate", 1);
+	bson_append_string(&bb, cast(char[])"user", user);
+	bson_append_string(&bb, cast(char[])"nonce", nonce);
+	bson_append_string(&bb, cast(char[])"key", hex_digest.ptr);
 	bson_from_buffer(&auth_cmd, &bb);
 
 	bson_destroy(&from_db);

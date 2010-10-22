@@ -814,7 +814,12 @@ bson_buffer* bson_append_string_base(bson_buffer* b, const_char* name, char* val
 	return b;
 }
 
-bson_buffer* bson_append_string(bson_buffer* b, const_char* name, char* value)
+bson_buffer* bson_append_string(bson_buffer* b, char[] name, char* value)
+{
+	return bson_append_string_base(b, cast(char*)name.ptr, value, bson_type.bson_string);
+}
+
+bson_buffer* bson_append_stringz(bson_buffer* b, char* name, char* value)
 {
 	return bson_append_string_base(b, name, value, bson_type.bson_string);
 }
@@ -926,9 +931,9 @@ bson_buffer* bson_append_time_t(bson_buffer* b, const_char* name, time_t secs)
 	return bson_append_date(b, name, cast(bson_date_t) secs * 1000);
 }
 
-bson_buffer* bson_append_start_object(bson_buffer* b, const_char* name)
+bson_buffer* bson_append_start_object(bson_buffer* b, string name)
 {
-	if(!bson_append_estart(b, bson_type.bson_object, name, 5))
+	if(!bson_append_estart(b, bson_type.bson_object, cast(char*)name.ptr, 5))
 		return null;
 	b.stack[b.stackPos++] = b.cur - b.buf;
 	bson_append32(b, &zero);

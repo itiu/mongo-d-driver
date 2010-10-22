@@ -429,14 +429,14 @@ free(ns);
 return success;
 }
 bson_bool_t mongo_simple_int_command(mongo_connection* conn, char* db, char* cmdstr, int arg, bson* realout);
-bson_bool_t mongo_simple_str_command(mongo_connection* conn, char* db, char* cmdstr, char* arg, bson* realout);
+bson_bool_t mongo_simple_str_command(mongo_connection* conn, char* db, string cmdstr, char* arg, bson* realout);
 bson_bool_t mongo_cmd_drop_db(mongo_connection* conn, char* db)
 {
 return mongo_simple_int_command(conn,db,cast(char*)"dropDatabase",1,null);
 }
 bson_bool_t mongo_cmd_drop_collection(mongo_connection* conn, char* db, char* collection, bson* _out)
 {
-return mongo_simple_str_command(conn,db,cast(char*)"drop",collection,_out);
+return mongo_simple_str_command(conn,db,"drop",collection,_out);
 }
 void mongo_cmd_reset_error(mongo_connection* conn, char* db)
 {
