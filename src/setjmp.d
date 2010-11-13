@@ -11,7 +11,7 @@
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
-module core.sys.posix.setjmp;
+module core.sys.posix.setjmp1;
 
 version (D2)
 {
@@ -72,7 +72,7 @@ version( linux )
 
     alias __jmp_buf_tag[1] jmp_buf;
 
-    alias _setjmp setjmp; // see XOpen block
+    alias _setjmp setjmp1; // see XOpen block
     void longjmp(jmp_buf, int);
 }
 

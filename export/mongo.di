@@ -11,7 +11,7 @@ private import std.intrinsic;
 version (D2)
 {
     alias char const_char;
-    private import core.sys.posix.setjmp;
+    private import core.sys.posix.setjmp1;
 
 }
 version (D1)

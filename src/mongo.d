@@ -89,7 +89,7 @@ private import std.intrinsic;
 version (D2)
 {
     alias const char const_char;
-    private import core.sys.posix.setjmp;
+    private import core.sys.posix.setjmp1;
 }
 version (D1)
 {
@@ -614,6 +614,11 @@ void MONGO_INIT_EXCEPTION (mongo_exception_context* exception_ptr)
     do{ 
         mongo_exception_type t; /* exception_ptr won't be available */
         exception_ptr.penv = &exception_ptr.base_handler;
+
+	version (D2)
+        int res_set_jmp = setjmp1(exception_ptr.base_handler);
+
+	version (D1)
         int res_set_jmp = setjmp(exception_ptr.base_handler);
 
 	if (res_set_jmp != 0)	
