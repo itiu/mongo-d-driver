@@ -89,6 +89,7 @@ private import std.intrinsic;
 version (D2)
 {
     alias const char const_char;
+    private import core.sys.posix.setjmp;
 }
 version (D1)
 {
@@ -236,6 +237,8 @@ extern(C)
 
 // C unsigned long int = uint	
 	
+version (D1)
+{
 // sigset.h
 	const _SIGSET_NWORDS = 1024 / (8 * uint.sizeof);
 	
@@ -260,13 +263,13 @@ else
 	
 	struct __jmp_buf_tag
 	  {
-	    /* NOTE: The machine-dependent definitions of `__sigsetjmp'
-	       assume that a `jmp_buf' begins with a `__jmp_buf' and that
-	       `__mask_was_saved' follows it.  Do not move these members
-	       or add others before it.  */
-	    __jmp_buf __jmpbuf;		/* Calling environment.  */
-	    int __mask_was_saved;	/* Saved the signal mask?  */
-	    __sigset_t __saved_mask;/* Saved signal mask.  */
+	    // NOTE: The machine-dependent definitions of `__sigsetjmp'
+	    //   assume that a `jmp_buf' begins with a `__jmp_buf' and that
+	    //   `__mask_was_saved' follows it.  Do not move these members
+	    //   or add others before it.  
+	    __jmp_buf __jmpbuf;		// Calling environment.  
+	    int __mask_was_saved;	// Saved the signal mask?  
+	    __sigset_t __saved_mask;// Saved signal mask.  
 	  };
 
 	
@@ -274,6 +277,7 @@ alias __jmp_buf_tag[1] jmp_buf;
 
 extern (C) void longjmp (__jmp_buf_tag __env[1], int __val);
 
+}
 //extern (C) uint16_t htons (uint16_t __hostshort);
 
 

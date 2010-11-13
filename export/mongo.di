@@ -11,6 +11,8 @@ private import std.intrinsic;
 version (D2)
 {
     alias char const_char;
+    private import core.sys.posix.setjmp;
+
 }
 version (D1)
 {
@@ -143,13 +145,15 @@ extern (C) struct sockaddr_in
     ubyte[8] sin_zero;
 }
 
-const _SIGSET_NWORDS = 1024 / (8 * (uint).sizeof);
-extern (C) struct __sigset_t
+version (D1)
+{
+    const _SIGSET_NWORDS = 1024 / (8 * (uint).sizeof);
+    extern (C) struct __sigset_t
 {
     uint[_SIGSET_NWORDS] __val;
 }
 
-version (WORDSIZE64)
+    version (WORDSIZE64)
 {
     alias short[8] __jmp_buf;
 }
@@ -157,15 +161,16 @@ else
 {
     alias short[6] __jmp_buf;
 }
-struct __jmp_buf_tag
+    struct __jmp_buf_tag
 {
     __jmp_buf __jmpbuf;
     int __mask_was_saved;
     __sigset_t __saved_mask;
 }
-alias __jmp_buf_tag[1] jmp_buf;
-extern (C) void longjmp(__jmp_buf_tag[1] __env, int __val);
+    alias __jmp_buf_tag[1] jmp_buf;
+    extern (C) void longjmp(__jmp_buf_tag[1] __env, int __val);
 
+}
 struct mongo_exception_context
 {
     jmp_buf base_handler;
