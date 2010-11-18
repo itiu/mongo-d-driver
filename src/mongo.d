@@ -90,10 +90,12 @@ version (D2)
 {
     alias const char const_char;
     private import core.sys.posix.setjmp1;
+    alias setjmp1 setJMP;
 }
 version (D1)
 {
     alias char const_char;
+    alias setjmp setJMP;
 }
         
 
@@ -472,32 +474,20 @@ static void looping_write(mongo_connection* conn, void* buf, int len)
 
 static void looping_read(mongo_connection* conn, void* buf, int len)
 {
-//Stdout.format("looping_read ###1 len={}", len).newline;
 	char* cbuf = cast(char*)buf;
 	while(len > 0)
-	{
-//Stdout.format("looping_read ###2").newline;
-//	for (int q = 0; q < len; q++)
-//	 Stdout.format("[{}]", *(cbuf+q)) ;
-	 
+	{	 
 		int sent = recv(conn.sock, cbuf, len, 0);
-
-//Stdout.format("looping_read ###3").newline;
-//	for (int q = 0; q < len; q++)
-//	 Stdout.format("[{}]", *(cbuf+q)) ;
-//Stdout.format("").newline;
 	 
 		if(sent == 0 || sent == -1)
 		{
-//Stdout.format("looping_read ###4 sent = {}", sent).newline;
 			for(; ; longjmp(*conn.exception.penv, mongo_exception_type.MONGO_EXCEPT_NETWORK))
 				conn.exception.type = mongo_exception_type.MONGO_EXCEPT_NETWORK;
 		}
 		cbuf += sent;
 		len -= sent;
-//Stdout.format("looping_read ###5 len = {}", len).newline;
+
 	}
-//Stdout.format("looping_read ###6").newline;
 }
 
 /* Always calls free(mm) */
@@ -615,11 +605,7 @@ void MONGO_INIT_EXCEPTION (mongo_exception_context* exception_ptr)
         mongo_exception_type t; /* exception_ptr won't be available */
         exception_ptr.penv = &exception_ptr.base_handler;
 
-	version (D2)
-        int res_set_jmp = setjmp1(exception_ptr.base_handler);
-
-	version (D1)
-        int res_set_jmp = setjmp(exception_ptr.base_handler);
+        int res_set_jmp = setJMP(exception_ptr.base_handler);
 
 	if (res_set_jmp != 0)	
 	{
@@ -824,7 +810,7 @@ mongo_reply* mongo_read_response(mongo_connection* conn)
 		jmp_buf exception__env;
 		exception__prev = conn.exception.penv;
 		conn.exception.penv = &exception__env;
-		if(setjmp(exception__env) == 0)
+		if(setJMP(exception__env) == 0)
 		{
 			do
 			{
@@ -851,7 +837,7 @@ mongo_reply* mongo_read_response(mongo_connection* conn)
 
 mongo_cursor* mongo_find(mongo_connection* conn, char* ns, bson* query, bson* fields, int nToReturn, int nToSkip, int options)
 {
-//Stdout.format("mongo_find ###3").newline;
+
 	int sl;
 	mongo_cursor* cursor;
 	char* data;
@@ -860,7 +846,7 @@ mongo_cursor* mongo_find(mongo_connection* conn, char* ns, bson* query, bson* fi
 	strlen(ns) + 1 + /* ns */
 	4 + 4 + /* skip,return */
 	bson_size(query) + bson_size(fields), 0, 0, mongo_operations.mongo_op_query);
-//Stdout.format("mongo_find ###4").newline;
+
 
 	data = &mm.data;
 	data = mongo_data_append32(data, &options);
@@ -874,28 +860,26 @@ mongo_cursor* mongo_find(mongo_connection* conn, char* ns, bson* query, bson* fi
 	bson_fatal_msg((data == (cast(char*) mm) + mm.head.len), cast(char*)"query building fail!");
 
 	mongo_message_send(conn, mm);
-//Stdout.format("mongo_find ###5").newline;
 
 	cursor = cast(mongo_cursor*) bson_malloc(mongo_cursor.sizeof);
-
 	{
-//Stdout.format("mongo_find ###5.1").newline;
+
 		jmp_buf* exception__prev; 
 		jmp_buf exception__env;
 		exception__prev = conn.exception.penv;
 		conn.exception.penv = &exception__env;
-		if(setjmp(exception__env) == 0)
+		if(setJMP(exception__env) == 0)
 		{
-//Stdout.format("mongo_find ###5.2").newline;
+
 			do
 			{
 				cursor.mm = mongo_read_response(conn);
-//Stdout.format("mongo_find ###5.3").newline;
+
 			} while(conn.exception.caught = 0 , conn.exception.caught);
 		}
 		else
 		{
-//Stdout.format("mongo_find ###5.4").newline;
+
 			conn.exception.caught = 1;
 		}
 		conn.exception.penv = exception__prev;
@@ -907,7 +891,7 @@ mongo_cursor* mongo_find(mongo_connection* conn, char* ns, bson* query, bson* fi
 	{
 		free(cursor);
 	}
-//Stdout.format("mongo_find ###6").newline;
+
 
 	sl = strlen(ns) + 1;
 	cursor.ns = cast (char*)bson_malloc(sl);
@@ -920,7 +904,7 @@ mongo_cursor* mongo_find(mongo_connection* conn, char* ns, bson* query, bson* fi
 	memcpy(cast(void*) cursor.ns, ns, sl); /* cast needed to silence GCC warning */
 	cursor.conn = conn;
 	cursor.current.data = null;
-//Stdout.format("mongo_find ###7").newline;
+
 	return cursor;
 }
 
@@ -960,7 +944,7 @@ int64_t mongo_count(mongo_connection* conn, char* db, char* ns, bson* query)
 		jmp_buf exception__env;
 		exception__prev = conn.exception.penv;
 		conn.exception.penv = &exception__env;
-		if(setjmp(exception__env) == 0)
+		if(setJMP(exception__env) == 0)
 		{
 			do
 			{
@@ -1050,7 +1034,7 @@ bson_bool_t mongo_cursor_get_more(mongo_cursor* cursor)
 			jmp_buf exception__env;
 			exception__prev = conn.exception.penv;
 			conn.exception.penv = &exception__env;
-			if(setjmp(exception__env) == 0)
+			if(setJMP(exception__env) == 0)
 			{
 				do
 				{
@@ -1133,7 +1117,7 @@ void mongo_cursor_destroy(mongo_cursor* cursor)
 			jmp_buf exception__env;
 			exception__prev = conn.exception.penv;
 			conn.exception.penv = &exception__env;
-			if(setjmp(exception__env) == 0)
+			if(setJMP(exception__env) == 0)
 			{
 				do
 				{
@@ -1411,7 +1395,7 @@ void mongo_cmd_add_user(mongo_connection* conn, char* db, char* user, char* pass
 		jmp_buf exception__env;
 		exception__prev = conn.exception.penv;
 		conn.exception.penv = &exception__env;
-		if(setjmp(exception__env) == 0)
+		if(setJMP(exception__env) == 0)
 		{
 			do
 			{
@@ -1490,7 +1474,7 @@ bson_bool_t mongo_cmd_authenticate(mongo_connection* conn, char* db, char* user,
 		jmp_buf exception__env;
 		exception__prev = conn.exception.penv;
 		conn.exception.penv = &exception__env;
-		if(setjmp(exception__env) == 0)
+		if(setJMP(exception__env) == 0)
 		{
 			do
 			{

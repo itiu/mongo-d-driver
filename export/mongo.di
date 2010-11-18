@@ -13,10 +13,12 @@ version (D2)
     alias char const_char;
     private import core.sys.posix.setjmp1;
 
+    alias setjmp1 setJMP;
 }
 version (D1)
 {
     alias char const_char;
+    alias setjmp setJMP;
 }
 version (Win32)
 {
