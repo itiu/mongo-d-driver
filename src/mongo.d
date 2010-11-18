@@ -504,7 +504,7 @@ void mongo_message_send(mongo_connection* conn, mongo_message* mm)
 		jmp_buf exception__env;
 		exception__prev = conn.exception.penv;
 		conn.exception.penv = &exception__env;
-		if(setjmp(exception__env) == 0)
+		if(setJMP(exception__env) == 0)
 		{
 			do
 			{
