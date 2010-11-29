@@ -293,6 +293,8 @@ b.finished = 1;
 }
 static bson_buffer* bson_append_estart(bson_buffer* b, int type, const_char* name, int dataSize);
 
+static bson_buffer* bson_append_estart(bson_buffer* b, int type, char[] name, int dataSize);
+
 bson_buffer* bson_append_int(bson_buffer* b, const_char* name, int i);
 bson_buffer* bson_append_long(bson_buffer* b, const_char* name, int64_t i);
 bson_buffer* bson_append_double(bson_buffer* b, const_char* name, double d);
@@ -300,6 +302,11 @@ bson_buffer* bson_append_bool(bson_buffer* b, const_char* name, bson_bool_t i);
 bson_buffer* bson_append_null(bson_buffer* b, const_char* name);
 bson_buffer* bson_append_undefined(bson_buffer* b, const_char* name);
 bson_buffer* bson_append_string_base(bson_buffer* b, const_char* name, char* value, bson_type type);
+bson_buffer* bson_append_stringA_base(bson_buffer* b, char[] name, char[] value, bson_type type);
+bson_buffer* bson_append_stringA(bson_buffer* b, char[] name, char[] value)
+{
+return bson_append_stringA_base(b,name,value,bson_type.bson_string);
+}
 bson_buffer* bson_append_string(bson_buffer* b, char[] name, char* value)
 {
 return bson_append_string_base(b,cast(char*)name.ptr,value,bson_type.bson_string);

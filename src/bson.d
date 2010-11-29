@@ -751,7 +751,17 @@ static bson_buffer* bson_append_estart(bson_buffer* b, int type, const_char* nam
 	bson_append(b, cast(char*)name, sl);
 	return b;
 }
-
+//++
+static bson_buffer* bson_append_estart(bson_buffer* b, int type, char[] name, int dataSize)
+{
+	int sl = name.length + 1;
+	if(!bson_ensure_space(b, 1 + sl + dataSize))
+		return null;
+	bson_append_byte(b, cast(char) type);
+	bson_append(b, cast(char*)name, sl - 1);
+	bson_append_byte(b, cast(char) 0);
+	return b;
+}
 
 /* ----------------------------
  BUILDING TYPES
@@ -813,12 +823,30 @@ bson_buffer* bson_append_string_base(bson_buffer* b, const_char* name, char* val
 	bson_append(b, value, sl);
 	return b;
 }
+//++
+bson_buffer* bson_append_stringA_base(bson_buffer* b, char[] name, char[] value,
+		bson_type type)
+{
+	int sl = value.length + 1;
+	if(!bson_append_estart(b, type, name, 4 + sl))
+		return null;
+	bson_append32(b, &sl);
+	bson_append(b, value.ptr, sl - 1);
+	bson_append_byte(b, cast(char) 0);	
+	return b;
+}
+
+bson_buffer* bson_append_stringA(bson_buffer* b, char[] name, char[] value)
+{
+	return bson_append_stringA_base(b, name, value, bson_type.bson_string);
+}
+
 
 bson_buffer* bson_append_string(bson_buffer* b, char[] name, char* value)
 {
-	return bson_append_string_base(b, cast(char*)name.ptr, value, bson_type.bson_string);
+        return bson_append_string_base(b, cast(char*)name.ptr, value, bson_type.bson_string);
 }
-
+        
 bson_buffer* bson_append_stringz(bson_buffer* b, char* name, char* value)
 {
 	return bson_append_string_base(b, name, value, bson_type.bson_string);
