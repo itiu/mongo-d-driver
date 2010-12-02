@@ -779,26 +779,25 @@ void mongo_remove(mongo_connection* conn, char* ns, bson* cond)
 
 mongo_reply* mongo_read_response(mongo_connection* conn)
 {
-//Stdout.format("mongo_read_response ###1").newline;
 	mongo_header head; /* header from network */
 	mongo_reply_fields fields; /* header from network */
 	mongo_reply* _out; /* native endian */
 	int len;
-//Stdout.format("mongo_read_response ###2").newline;
 
 	looping_read(conn, &head, head.sizeof);
 	looping_read(conn, &fields, fields.sizeof);
-//Stdout.format("mongo_read_response ###3").newline;
 
 	bson_little_endian32(&len, &head.len);
+
+    	if (len < head.sizeof+fields.sizeof || len > 64*1024*1024)
+        	throw new Exception ("MONGO_EXCEPT_NETWORK"); /* most likely corruption */
+
 	_out = cast(mongo_reply*) bson_malloc(len);
-//Stdout.format("mongo_read_response ###4").newline;
 
 	_out.head.len = len;
 	bson_little_endian32(&_out.head.id, &head.id);
 	bson_little_endian32(&_out.head.responseTo, &head.responseTo);
 	bson_little_endian32(&_out.head.op, &head.op);
-//Stdout.format("mongo_read_response ###5").newline;
 
 	bson_little_endian32(&_out.fields.flag, &fields.flag);
 	bson_little_endian64(&_out.fields.cursorID, &fields.cursorID);
@@ -830,7 +829,6 @@ mongo_reply* mongo_read_response(mongo_connection* conn)
 	{
 		free(_out);
 	}
-//Stdout.format("mongo_read_response ###6").newline;
 
 	return _out;
 }
