@@ -902,6 +902,27 @@ bson_buffer* bson_append_new_oid(bson_buffer* b, const_char* name)
 	return bson_append_oid(b, name, &oid);
 }
 
+bson_buffer* bson_append_regexA(bson_buffer* b, char[] name, char[] pattern,
+		char[] opts)
+{
+	int plen = 1;
+	if (pattern !is null)
+		plen = pattern.length + 1;
+	
+	int olen = 1;
+	if (opts !is null)
+		olen = opts.length + 1;
+	
+	if(!bson_append_estart(b, bson_type.bson_regex, name, plen + olen))
+		return null;
+	
+	bson_append(b, pattern.ptr, plen - 1);
+	bson_append_byte(b, cast(char) 0);	
+	bson_append(b, opts.ptr, olen - 1);
+	bson_append_byte(b, cast(char) 0);	
+	return b;
+}
+
 bson_buffer* bson_append_regex(bson_buffer* b, const_char* name, char* pattern,
 		char* opts)
 {
