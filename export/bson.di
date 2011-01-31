@@ -332,6 +332,7 @@ bson_oid_t oid;
 bson_oid_gen(&oid);
 return bson_append_oid(b,name,&oid);
 }
+bson_buffer* bson_append_regexA(bson_buffer* b, char[] name, char[] pattern, char[] opts);
 bson_buffer* bson_append_regex(bson_buffer* b, const_char* name, char* pattern, char* opts);
 bson_buffer* bson_append_bson(bson_buffer* b, const_char* name, bson* bson);
 bson_buffer* bson_append_element(bson_buffer* b, const_char* name_or_null, bson_iterator* elem);
