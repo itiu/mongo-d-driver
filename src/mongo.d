@@ -372,9 +372,9 @@ enum socket_type
   /* Flags to be ORed into the type parameter of socket and socketpair and
      used for the flags parameter of paccept.  */
 
-  SOCK_CLOEXEC = 02000000,      /* Atomically set close-on-exec flag for the
+  SOCK_CLOEXEC = std.conv.octal!2000000,      /* Atomically set close-on-exec flag for the
                                    new descriptor(s).  */
-  SOCK_NONBLOCK = 04000         /* Atomically mark descriptor(s) as
+  SOCK_NONBLOCK = std.conv.octal!4000         /* Atomically mark descriptor(s) as
                                    non-blocking.  */
 };
 

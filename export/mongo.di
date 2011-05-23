@@ -22,7 +22,7 @@ version (D1)
 }
 version (Win32)
 {
-    pragma(lib, "ws2_32.lib");
+    pragma (lib, "ws2_32.lib");
     extern (Windows) 
 {
     private typedef int socket_t = ~0;
@@ -243,8 +243,8 @@ SOCK_RDM = 4,
 SOCK_SEQPACKET = 5,
 SOCK_DCCP = 6,
 SOCK_PACKET = 10,
-SOCK_CLOEXEC = 524288,
-SOCK_NONBLOCK = 2048,
+SOCK_CLOEXEC = std.conv.octal!(2000000),
+SOCK_NONBLOCK = std.conv.octal!(4000),
 }
 extern (C) struct sockaddr
 {

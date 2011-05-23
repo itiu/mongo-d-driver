@@ -81,7 +81,7 @@ return y ^ (x | ~z);
 
 version (D1)
 {
-    private static void ff(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+    private static void ff(uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
 a += f(b,c,d) + x + ac;
 a = rotateLeft(a,s);
@@ -103,7 +103,7 @@ a += b;
 }
 version (D1)
 {
-    private static void gg(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+    private static void gg(uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
 a += g(b,c,d) + x + ac;
 a = rotateLeft(a,s);
@@ -125,7 +125,7 @@ a += b;
 }
 version (D1)
 {
-    private static void hh(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+    private static void hh(uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
 a += h(b,c,d) + x + ac;
 a = rotateLeft(a,s);
@@ -147,7 +147,7 @@ a += b;
 }
 version (D1)
 {
-    private static void ii(ref uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
+    private static void ii(uint a, uint b, uint c, uint d, uint x, uint s, uint ac)
 {
 a += i(b,c,d) + x + ac;
 a = rotateLeft(a,s);
