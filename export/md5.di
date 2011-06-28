@@ -175,5 +175,5 @@ pms.abcd[1] = T_MASK ^ 271733878;
 pms.abcd[2] = T_MASK ^ 1732584193;
 pms.abcd[3] = 271733878;
 }
-void mongo_md5_append(mongo_md5_state_t* pms, mongo_md5_byte_t* data, int nbytes);
+void mongo_md5_append(mongo_md5_state_t* pms, const mongo_md5_byte_t* data, int nbytes);
 void mongo_md5_finish(mongo_md5_state_t* pms, mongo_md5_byte_t[16] digest);

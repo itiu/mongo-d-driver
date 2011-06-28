@@ -389,10 +389,10 @@ void mongo_md5_init(mongo_md5_state_t* pms)
 	pms.abcd[3] = 0x10325476;
 }
 
-void mongo_md5_append(mongo_md5_state_t* pms, mongo_md5_byte_t* data,
+void mongo_md5_append(mongo_md5_state_t* pms, const mongo_md5_byte_t* data,
 		int nbytes)
 {
-	mongo_md5_byte_t* p = data;
+	mongo_md5_byte_t* p = cast(mongo_md5_byte_t*)data;
 	int left = nbytes;
 	int offset = (pms.count[0] >> 3) & 63;
 	mongo_md5_word_t nbits = cast(mongo_md5_word_t) (nbytes << 3);
