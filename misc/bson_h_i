@@ -1,0 +1,19 @@
+module bson_h;
+
+alias byte int8_t;
+alias ubyte uint8_t;
+
+alias short int16_t;
+alias ushort uint16_t;
+
+alias int int32_t;
+alias uint uint32_t;
+
+alias long int64_t;
+alias ulong uint64_t;
+
+alias int time_t;
+
+int INT_MIN = -32767;
+int INT_MAX =  32767;
+

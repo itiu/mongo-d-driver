@@ -1,0 +1,164 @@
+module bson;
+
+private import std.c.stdlib;
+private import std.c.string;
+private import std.date;
+private import std.c.stdio;
+import std.stdarg;
+
+private import bson_h;
+private import numbers;
+
+// ++ stringz -> string
+
+static int _bson_append_string(bson* b, string name, string value)
+{
+	return _bson_append_string_base(b, name, value, bson_type.BSON_STRING);
+}
+
+static int _bson_append_string_base(bson* b, string name, string value, bson_type type)
+{
+	int sl = value.length + 1;
+	if(bson_check_string(b, cast(char*) value, sl - 1) == BSON_ERROR)
+		return BSON_ERROR;
+	if(_bson_append_estart(b, type, name, 4 + sl) == BSON_ERROR)
+	{
+		return BSON_ERROR;
+	}
+	bson_append32(b, &sl);
+	bson_append(b, cast(char*) value, sl - 1);
+	bson_append_byte(b, cast(char) 0);
+	return BSON_OK;
+}
+
+static int _bson_append_estart(bson* b, int type, string name, int dataSize)
+{
+	if(name is null)
+		return BSON_ERROR;
+
+	int len = name.length + 1;
+	if(bson_ensure_space(b, 1 + len + dataSize) == BSON_ERROR)
+	{
+		return BSON_ERROR;
+	}
+
+	if(bson_check_field_name(b, cast(char*) name, len - 1) == BSON_ERROR)
+	{
+		bson_builder_error(b);
+		return BSON_ERROR;
+	}
+
+	bson_append_byte(b, cast(char) type);
+	bson_append(b, cast(char*) name, len - 1);
+	bson_append_byte(b, cast(char) 0);
+	return BSON_OK;
+}
+
+static int _bson_append_start_array(bson* b, string name)
+{
+	if(_bson_append_estart(b, bson_type.BSON_ARRAY, name, 5) == BSON_ERROR)
+		return BSON_ERROR;
+	b.stack[b.stackPos++] = b.cur - b.data;
+	bson_append32(b, &zero);
+	return BSON_OK;
+}
+
+static int _bson_append_int(bson* b, string name, const int i)
+{
+	if(_bson_append_estart(b, BSON_INT, name, 4) == BSON_ERROR)
+		return BSON_ERROR;
+	bson_append32(b, &i);
+	return BSON_OK;
+}
+
+static int _bson_append_start_object(bson* b, string name)
+{
+	if(_bson_append_estart(b, bson_type.BSON_OBJECT, name, 5) == BSON_ERROR)
+		return BSON_ERROR;
+	b.stack[b.stackPos++] = b.cur - b.data;
+	bson_append32(b, &zero);
+	return BSON_OK;
+}
+
+static int _bson_append_regex(bson* b, string name, string pattern, string opts)
+{
+	int plen = 1;
+	if(pattern !is null)
+		plen = pattern.length + 1;
+
+	int olen = 1;
+	if(opts !is null)
+		olen = opts.length + 1;
+
+	if(_bson_append_estart(b, bson_type.BSON_REGEX, name, plen + olen) == BSON_ERROR)
+		return BSON_ERROR;
+
+	if(bson_check_string(b, cast(char*) pattern, plen - 1) == BSON_ERROR)
+		return BSON_ERROR;
+
+	bson_append(b, cast(char*) pattern, plen - 1);
+	bson_append_byte(b, cast(char) 0);
+	bson_append(b, cast(char*) opts, olen - 1);
+	bson_append_byte(b, cast(char) 0);
+
+	return BSON_OK;
+}
+
+version(MONGO_BIG_ENDIAN)
+{
+//	#define bson_little_endian64(out, in) ( bson_swap_endian64(out, in) )
+//	#define bson_little_endian32(out, in) ( bson_swap_endian32(out, in) )
+
+//	#define bson_big_endian32(out, in) ( memcpy(out, in, 4) )
+} else
+{
+	//#else
+
+	//#define bson_little_endian64(out, in) ( memcpy(out, in, 8) )
+	static void bson_little_endian64(void* outp, const void* inp)
+	{
+		memcpy(outp, inp, 8);
+	}
+
+	//#define bson_little_endian32(out, in) ( memcpy(out, in, 4) )
+	static void bson_little_endian32(void* outp, const void* inp)
+	{
+		memcpy(outp, inp, 4);
+	}
+
+	//#define bson_big_endian32(out, in) ( bson_swap_endian32(out, in) )
+	static void bson_big_endian32(void* outp, void* inp)
+	{
+		bson_swap_endian32(cast(char*) outp, cast(char*) inp);
+	}
+
+	//#define bson_big_endian64(out, in) ( bson_swap_endian64(out, in) )
+	static void bson_big_endian64(void* outp, void* inp)
+	{
+		bson_swap_endian64(cast(char*) outp, cast(char*) inp);
+	}
+//	#endif
+}
+
+static void bson_swap_endian64(char* outp, char* inp)
+{
+	outp[0] = inp[7];
+	outp[1] = inp[6];
+	outp[2] = inp[5];
+	outp[3] = inp[4];
+	outp[4] = inp[3];
+	outp[5] = inp[2];
+	outp[6] = inp[1];
+	outp[7] = inp[0];
+
+}
+
+static void bson_swap_endian32(char* outp, char* inp)
+{
+	outp[0] = inp[3];
+	outp[1] = inp[2];
+	outp[2] = inp[1];
+	outp[3] = inp[0];
+}
+
+
