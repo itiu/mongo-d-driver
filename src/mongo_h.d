@@ -133,7 +133,7 @@ struct mongo_reply{
 //#pragma pack()
 
 struct mongo_host_port {
-    char host[255];
+    string host;
     int port;
     mongo_host_port *next;
 } ;
