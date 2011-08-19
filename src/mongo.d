@@ -4,60 +4,13 @@ private import std.c.stdlib;
 private import std.c.string;
 private import std.date;
 private import std.c.stdio;
+private import std.socket;
 
 import bson_h;
 import bson;
 
 import mongo_h;
 import md5;
-
-import net;
-
-/* Always calls bson_free(mm) */
-int mongo_message_send(mongo* conn, mongo_message* mm)
-{
-	mongo_header head; /* little endian */
-	int res;
-	bson_little_endian32(&head.len, &mm.head.len);
-	bson_little_endian32(&head.id, &mm.head.id);
-	bson_little_endian32(&head.responseTo, &mm.head.responseTo);
-	bson_little_endian32(&head.op, &mm.head.op);
-
-	res = mongo_write_socket(conn, &head, head.sizeof);
-	if(res != MONGO_OK)
-	{
-
-		printf("reconnect to mongodb...\n");
-		if(mongo_reconnect(conn) == MONGO_OK)
-		{
-			printf("will retry sending the message to mongodb...\n");
-			int res1 = mongo_write_socket(conn, &head, head.sizeof);
-			if(res1 != MONGO_OK)
-			{
-				printf("fail of retry send message.\n");
-				bson_free(mm);
-				return res;
-			}
-
-		} else
-		{
-			printf("Error reconnecting to mongodb.\n");
-			bson_free(mm);
-			return res;
-		}
-
-	}
-
-	res = mongo_write_socket(conn, &mm.data, mm.head.len - head.sizeof);
-	if(res != MONGO_OK)
-	{
-		bson_free(mm);
-		return res;
-	}
-
-	bson_free(mm);
-	return MONGO_OK;
-}
 
 /* mongo.c */
 
@@ -107,44 +60,6 @@ mongo_message *mongo_message_create( int len , int id , int responseTo , int op 
     mm.head.op = op;
 
     return mm;
-}
-
-int mongo_read_response( mongo *conn, mongo_reply **reply ) {
-    mongo_header head; /* header from network */
-    mongo_reply_fields fields; /* header from network */
-    mongo_reply *_out;  /* native endian */
-    uint len;
-    int res;
-
-    mongo_read_socket( conn, &head, head.sizeof );
-    mongo_read_socket( conn, &fields, fields.sizeof );
-
-    bson_little_endian32( &len, &head.len );
-
-    if ( len < head.sizeof+fields.sizeof || len > 64*1024*1024 )
-        return mongo_error_t.MONGO_READ_SIZE_ERROR;  /* most likely corruption */
-
-    _out = cast( mongo_reply * )bson_malloc( len );
-
-    _out.head.len = len;
-    bson_little_endian32( &_out.head.id, &head.id );
-    bson_little_endian32( &_out.head.responseTo, &head.responseTo );
-    bson_little_endian32( &_out.head.op, &head.op );
-
-    bson_little_endian32( &_out.fields.flag, &fields.flag );
-    bson_little_endian64( &_out.fields.cursorID, &fields.cursorID );
-    bson_little_endian32( &_out.fields.start, &fields.start );
-    bson_little_endian32( &_out.fields.num, &fields.num );
-
-    res = mongo_read_socket( conn, &_out.objs, len-head.sizeof-fields.sizeof );
-    if( res != MONGO_OK ) {
-        bson_free( _out );
-        return res;
-    }
-
-    *reply = _out;
-
-    return MONGO_OK;
 }
 
 
@@ -438,20 +353,6 @@ int mongo_set_op_timeout( mongo *conn, int millis ) {
     return MONGO_OK;
 }
 
-int mongo_reconnect( mongo *conn ) {
-    int res;
-    mongo_disconnect( conn );
-
-    if( conn.replset ) {
-        conn.replset.primary_connected = 0;
-        mongo_replset_free_list( &conn.replset.hosts );
-        conn.replset.hosts = null;
-        res = mongo_replset_connect( conn );
-        return res;
-    } else
-        return mongo_socket_connect( conn, conn.primary.host, conn.primary.port );
-}
-
 int mongo_check_connection( mongo *conn ) {
     if( ! conn.connected )
         return MONGO_ERROR;
@@ -460,22 +361,6 @@ int mongo_check_connection( mongo *conn ) {
         return MONGO_OK;
     else
         return MONGO_ERROR;
-}
-
-void mongo_disconnect( mongo *conn ) {
-    if( ! conn.connected )
-        return;
-
-    if( conn.replset ) {
-        conn.replset.primary_connected = 0;
-        mongo_replset_free_list( &conn.replset.hosts );
-        conn.replset.hosts = null;
-    }
-
-    mongo_close_socket( conn.sock );
-
-    conn.sock = null;
-    conn.connected = 0;
 }
 
 void mongo_destroy( mongo *conn ) {
@@ -1252,3 +1137,278 @@ bson_bool_t mongo_cmd_authenticate( mongo *conn,  char *db,  char *user,  char *
     else
         return MONGO_ERROR;
 }
+////////////////////////////////////////////// transport layer ///////////////////////////////////////////////////////
+
+int mongo_read_response(mongo* conn, mongo_reply** reply, bool retry = false)
+{
+	int res;
+	mongo_reply* _out; /* native endian */
+
+	try
+	{
+		mongo_header head; /* header from network */
+		mongo_reply_fields fields; /* header from network */
+		uint len;
+		int res;
+
+		mongo_read_socket(conn, &head, head.sizeof);
+		if(res != MONGO_OK)
+		{
+			throw new Exception("io _in mongo_read_socket, phase 1");
+		}
+
+		mongo_read_socket(conn, &fields, fields.sizeof);
+		if(res != MONGO_OK)
+		{
+			throw new Exception("io _in mongo_read_socket, phase 2");
+		}
+
+		bson_little_endian32(&len, &head.len);
+
+		if(len < head.sizeof + fields.sizeof || len > 64 * 1024 * 1024)
+			return mongo_error_t.MONGO_READ_SIZE_ERROR; /* most likely corruption */
+
+		_out = cast(mongo_reply*) bson_malloc(len);
+
+		_out.head.len = len;
+		bson_little_endian32(&_out.head.id, &head.id);
+		bson_little_endian32(&_out.head.responseTo, &head.responseTo);
+		bson_little_endian32(&_out.head.op, &head.op);
+
+		bson_little_endian32(&_out.fields.flag, &fields.flag);
+		bson_little_endian64(&_out.fields.cursorID, &fields.cursorID);
+		bson_little_endian32(&_out.fields.start, &fields.start);
+		bson_little_endian32(&_out.fields.num, &fields.num);
+
+		res = mongo_read_socket(conn, &_out.objs, len - head.sizeof - fields.sizeof);
+		if(res != MONGO_OK)
+		{
+			throw new Exception("io _in mongo_read_socket, phase 3");
+		}
+
+		*reply = _out;
+
+		return MONGO_OK;
+	} catch(Exception ex)
+	{
+		printf("mongo_read_response:fail connect to mongodb, sleep 1s...\n");
+		core.thread.Thread.getThis().sleep(10_000_000);
+		printf("reconnect to mongodb...\n");
+		if(mongo_reconnect(conn) == MONGO_OK)
+		{
+			printf("will retry read data from mongodb...\n");
+			int res2 = mongo_read_response(conn, reply, true);
+			if(res2 != MONGO_OK)
+			{
+				printf("fail retry read data.\n");
+				return res;
+			}
+
+			return MONGO_OK;
+		} else
+		{
+			printf("Error reconnecting to mongodb.\n");
+			return res;
+		}
+	} finally
+	{
+		if(!retry)
+		{
+			if(res != MONGO_OK)
+			{
+			    bson_free(_out);
+			}    
+		}
+	}
+}
+
+/* Always calls bson_free(mm) */
+int mongo_message_send(mongo* conn, mongo_message* mm, bool retry = false)
+{
+	int res;
+	try
+	{
+		mongo_header head; /* little endian */
+		bson_little_endian32(&head.len, &mm.head.len);
+		bson_little_endian32(&head.id, &mm.head.id);
+		bson_little_endian32(&head.responseTo, &mm.head.responseTo);
+		bson_little_endian32(&head.op, &mm.head.op);
+
+		res = mongo_write_socket(conn, &head, head.sizeof);
+		if(res != MONGO_OK)
+		{
+			throw new Exception("io _in mongo_write_socket, phase 1");
+		}
+
+		res = mongo_write_socket(conn, &mm.data, mm.head.len - head.sizeof);
+		if(res != MONGO_OK)
+		{
+			throw new Exception("io _in mongo_write_socket, phase 2");
+		}
+
+		return MONGO_OK;
+	} catch(Exception ex)
+	{
+		printf("mongo_message_send:fail connect to mongodb, sleep 1s...\n");
+		core.thread.Thread.getThis().sleep(10_000_000);
+		printf("reconnect to mongodb...\n");
+		if(mongo_reconnect(conn) == MONGO_OK)
+		{
+			printf("will retry sending the message to mongodb...\n");
+			int res2 = mongo_message_send(conn, mm, true);
+			if(res2 != MONGO_OK)
+			{
+				printf("fail retry sending the message.\n");
+				return res;
+			}
+
+			return MONGO_OK;
+		} else
+		{
+			printf("Error reconnecting to mongodb.\n");
+			return res;
+		}
+	} finally
+	{
+		if(!retry)
+		{
+			bson_free(mm);
+		}
+	}
+}
+
+int send(Socket sock, void* buf, size_t len, int flags)
+{
+	void[] bb = buf[0 .. len];
+	int ll = sock.send(bb);
+	return ll;
+}
+
+int recv(Socket sock, void* buf, size_t len, int flags)
+{
+	void[] bb = buf[0 .. len];
+	int ll = sock.receive(bb);
+	return ll;
+}
+
+void mongo_close_socket(Socket sock)
+{
+	sock.close();
+}
+
+int mongo_socket_connect(mongo* conn, char* host, int port)
+{
+	conn.sock = new Socket(AddressFamily.INET, SocketType.STREAM, ProtocolType.TCP);
+	InternetAddress addr = new InternetAddress(cast(string) host[0 .. strlen(host)], cast(ushort) port);
+	conn.sock.connect(addr);
+
+	if(conn.sock.isAlive())
+	{
+		conn.sock.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, true);
+		return MONGO_OK;
+	} else
+	{
+		conn.sock = null;
+		conn.err = mongo_error_t.MONGO_CONN_FAIL;
+		printf("mongo_socket_connect is fail\n");
+		return MONGO_ERROR;
+	}
+}
+
+int mongo_write_socket(mongo* conn, void* buf, int len)
+{
+	char* cbuf = cast(char*) buf;
+	while(len)
+	{
+		int sent = send(conn.sock, cbuf, len, 0);
+		if(sent == -1)
+		{
+			printf("Error write to socket\n");
+			conn.err = mongo_error_t.MONGO_IO_ERROR;
+			return MONGO_ERROR;
+		}
+		cbuf += sent;
+		len -= sent;
+	}
+
+	return MONGO_OK;
+}
+
+/* net.c */
+
+/*    Copyright 2009-2011 10gen Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except _in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to _in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+/* Implementation for generic version of net.h */
+//////#include "net.h"
+//////#include <string.h>
+int mongo_read_socket(mongo* conn, void* buf, int len)
+{
+	char* cbuf = cast(char*) buf;
+	while(len)
+	{
+		int sent = recv(conn.sock, cbuf, len, 0);
+		if(sent == 0 || sent == -1)
+		{
+			conn.err = mongo_error_t.MONGO_IO_ERROR;
+			return MONGO_ERROR;
+		}
+		cbuf += sent;
+		len -= sent;
+	}
+
+	return MONGO_OK;
+}
+
+/* This is a no-op _in the generic implementation. */
+int mongo_set_socket_op_timeout(mongo* conn, int millis)
+{
+	return MONGO_OK;
+}
+
+int mongo_reconnect(mongo* conn)
+{
+	int res;
+	mongo_disconnect(conn);
+
+	if(conn.replset)
+	{
+		conn.replset.primary_connected = 0;
+		mongo_replset_free_list(&conn.replset.hosts);
+		conn.replset.hosts = null;
+		res = mongo_replset_connect(conn);
+		return res;
+	} else
+		return mongo_socket_connect(conn, conn.primary.host, conn.primary.port);
+}
+
+void mongo_disconnect(mongo* conn)
+{
+	if(!conn.connected)
+		return;
+
+	if(conn.replset)
+	{
+		conn.replset.primary_connected = 0;
+		mongo_replset_free_list(&conn.replset.hosts);
+		conn.replset.hosts = null;
+	}
+
+	mongo_close_socket(conn.sock);
+
+	conn.sock = null;
+	conn.connected = 0;
+}
+

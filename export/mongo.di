@@ -8,12 +8,12 @@ private import std.date;
 
 private import std.c.stdio;
 
+private import std.socket;
+
 import bson_h;
 import bson;
 import mongo_h;
 import md5;
-import net;
-int mongo_message_send(mongo* conn, mongo_message* mm);
 static int ZERO = 0;
 
 static int ONE = 1;
@@ -29,7 +29,6 @@ mm.head.responseTo = responseTo;
 mm.head.op = op;
 return mm;
 }
-int mongo_read_response(mongo* conn, mongo_reply** reply);
 char* mongo_data_append(char* start, void* data, int len)
 {
 memcpy(start,data,len);
@@ -90,9 +89,7 @@ if (conn.sock && conn.connected)
 mongo_set_socket_op_timeout(conn,millis);
 return MONGO_OK;
 }
-int mongo_reconnect(mongo* conn);
 int mongo_check_connection(mongo* conn);
-void mongo_disconnect(mongo* conn);
 void mongo_destroy(mongo* conn);
 static int mongo_bson_valid(mongo* conn, bson* bson, int write);
 
@@ -243,3 +240,30 @@ bson_destroy(&pass_obj);
 return res;
 }
 bson_bool_t mongo_cmd_authenticate(mongo* conn, char* db, char* user, char* pass);
+int mongo_read_response(mongo* conn, mongo_reply** reply, bool retry = false);
+int mongo_message_send(mongo* conn, mongo_message* mm, bool retry = false);
+int send(Socket sock, void* buf, size_t len, int flags)
+{
+void[] bb = buf[0..len];
+int ll = sock.send(bb);
+return ll;
+}
+int recv(Socket sock, void* buf, size_t len, int flags)
+{
+void[] bb = buf[0..len];
+int ll = sock.receive(bb);
+return ll;
+}
+void mongo_close_socket(Socket sock)
+{
+sock.close();
+}
+int mongo_socket_connect(mongo* conn, char* host, int port);
+int mongo_write_socket(mongo* conn, void* buf, int len);
+int mongo_read_socket(mongo* conn, void* buf, int len);
+int mongo_set_socket_op_timeout(mongo* conn, int millis)
+{
+return MONGO_OK;
+}
+int mongo_reconnect(mongo* conn);
+void mongo_disconnect(mongo* conn);
