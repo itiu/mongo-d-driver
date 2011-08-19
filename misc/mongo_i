@@ -4,58 +4,11 @@ private import std.c.stdlib;
 private import std.c.string;
 private import std.date;
 private import std.c.stdio;
+private import std.socket;
 
 import bson_h;
 import bson;
 
 import mongo_h;
 import md5;
-
-import net;
-
-/* Always calls bson_free(mm) */
-int mongo_message_send(mongo* conn, mongo_message* mm)
-{
-	mongo_header head; /* little endian */
-	int res;
-	bson_little_endian32(&head.len, &mm.head.len);
-	bson_little_endian32(&head.id, &mm.head.id);
-	bson_little_endian32(&head.responseTo, &mm.head.responseTo);
-	bson_little_endian32(&head.op, &mm.head.op);
-
-	res = mongo_write_socket(conn, &head, head.sizeof);
-	if(res != MONGO_OK)
-	{
-
-		printf("reconnect to mongodb...\n");
-		if(mongo_reconnect(conn) == MONGO_OK)
-		{
-			printf("will retry sending the message to mongodb...\n");
-			int res1 = mongo_write_socket(conn, &head, head.sizeof);
-			if(res1 != MONGO_OK)
-			{
-				printf("fail of retry send message.\n");
-				bson_free(mm);
-				return res;
-			}
-
-		} else
-		{
-			printf("Error reconnecting to mongodb.\n");
-			bson_free(mm);
-			return res;
-		}
-
-	}
-
-	res = mongo_write_socket(conn, &mm.data, mm.head.len - head.sizeof);
-	if(res != MONGO_OK)
-	{
-		bson_free(mm);
-		return res;
-	}
-
-	bson_free(mm);
-	return MONGO_OK;
-}
 

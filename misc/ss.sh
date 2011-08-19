@@ -15,6 +15,7 @@ cat mongo_h_i > ftmp
 cat mongo.h >> ftmp
 ./c_to_d.sh ftmp mongo_h.d
 
-cat net_i > ftmp
-cat net.c >> ftmp
-./c_to_d.sh ftmp net.d
+cat mongo_i > ftmp
+cat mongo.c >> ftmp
+cat net_i >> ftmp
+./c_to_d.sh ftmp mongo.d

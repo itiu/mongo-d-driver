@@ -48,44 +48,6 @@ mongo_message *mongo_message_create( int len , int id , int responseTo , int op 
     return mm;
 }
 
-int mongo_read_response( mongo *conn, mongo_reply **reply ) {
-    mongo_header head; /* header from network */
-    mongo_reply_fields fields; /* header from network */
-    mongo_reply *out;  /* native endian */
-    unsigned int len;
-    int res;
-
-    mongo_read_socket( conn, &head, sizeof( head ) );
-    mongo_read_socket( conn, &fields, sizeof( fields ) );
-
-    bson_little_endian32( &len, &head.len );
-
-    if ( len < sizeof( head )+sizeof( fields ) || len > 64*1024*1024 )
-        return MONGO_READ_SIZE_ERROR;  /* most likely corruption */
-
-    out = ( mongo_reply * )bson_malloc( len );
-
-    out->head.len = len;
-    bson_little_endian32( &out->head.id, &head.id );
-    bson_little_endian32( &out->head.responseTo, &head.responseTo );
-    bson_little_endian32( &out->head.op, &head.op );
-
-    bson_little_endian32( &out->fields.flag, &fields.flag );
-    bson_little_endian64( &out->fields.cursorID, &fields.cursorID );
-    bson_little_endian32( &out->fields.start, &fields.start );
-    bson_little_endian32( &out->fields.num, &fields.num );
-
-    res = mongo_read_socket( conn, &out->objs, len-sizeof( head )-sizeof( fields ) );
-    if( res != MONGO_OK ) {
-        bson_free( out );
-        return res;
-    }
-
-    *reply = out;
-
-    return MONGO_OK;
-}
-
 
 char *mongo_data_append( char *start , const void *data , int len ) {
     memcpy( start , data , len );
@@ -377,20 +339,6 @@ int mongo_set_op_timeout( mongo *conn, int millis ) {
     return MONGO_OK;
 }
 
-int mongo_reconnect( mongo *conn ) {
-    int res;
-    mongo_disconnect( conn );
-
-    if( conn->replset ) {
-        conn->replset->primary_connected = 0;
-        mongo_replset_free_list( &conn->replset->hosts );
-        conn->replset->hosts = NULL;
-        res = mongo_replset_connect( conn );
-        return res;
-    } else
-        return mongo_socket_connect( conn, conn->primary->host, conn->primary->port );
-}
-
 int mongo_check_connection( mongo *conn ) {
     if( ! conn->connected )
         return MONGO_ERROR;
@@ -399,22 +347,6 @@ int mongo_check_connection( mongo *conn ) {
         return MONGO_OK;
     else
         return MONGO_ERROR;
-}
-
-void mongo_disconnect( mongo *conn ) {
-    if( ! conn->connected )
-        return;
-
-    if( conn->replset ) {
-        conn->replset->primary_connected = 0;
-        mongo_replset_free_list( &conn->replset->hosts );
-        conn->replset->hosts = NULL;
-    }
-
-    mongo_close_socket( conn->sock );
-
-    conn->sock = 0;
-    conn->connected = 0;
 }
 
 void mongo_destroy( mongo *conn ) {
