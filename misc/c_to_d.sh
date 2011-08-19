@@ -7,6 +7,9 @@ cat tmp_o > tmp_i
 sed "s/const char \*cur;/char \*cur;/g" tmp_i > tmp_o
 
 cat tmp_o > tmp_i
+sed "s/( const char \* )\&node->host/node->host/g" tmp_i > tmp_o
+
+cat tmp_o > tmp_i
 sed "s/static int ( \*oid_fuzz_func )( void ) = NULL;/static int function () oid_fuzz_func = null;/g" tmp_i > tmp_o
 
 cat tmp_o > tmp_i
@@ -441,6 +444,12 @@ sed 's/connect( conn.sock/connect( cast(socket_t)conn.sock/g' tmp_i > tmp_o
 
 cat tmp_o > tmp_i
 sed 's/conn.sock = 0;/conn.sock = null;/g' tmp_i > tmp_o
+
+cat tmp_o > tmp_i
+sed 's/char \*host;/string host;/g' tmp_i > tmp_o
+
+cat tmp_o > tmp_i
+sed 's/char host\[255\];/string host;/g' tmp_i > tmp_o
 
 cat tmp_o > $2
 rm tmp_i

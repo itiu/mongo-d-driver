@@ -101,22 +101,6 @@ void mongo_init( mongo *conn ) {
     conn->op_timeout_ms = 0;
 }
 
-int mongo_connect( mongo *conn , const char *host, int port ) {
-    conn->primary = bson_malloc( sizeof( mongo_host_port ) );
-    strncpy( conn->primary->host, host, strlen( host ) + 1 );
-    conn->primary->port = port;
-    conn->primary->next = NULL;
-
-    mongo_init( conn );
-    if( mongo_socket_connect( conn, host, port ) != MONGO_OK )
-        return MONGO_ERROR;
-
-    if( mongo_check_is_master( conn ) != MONGO_OK )
-        return MONGO_ERROR;
-    else
-        return MONGO_OK;
-}
-
 void mongo_replset_init( mongo *conn, const char *name ) {
     mongo_init( conn );
 
@@ -128,22 +112,6 @@ void mongo_replset_init( mongo *conn, const char *name ) {
     memcpy( conn->replset->name, name, strlen( name ) + 1  );
 
     conn->primary = bson_malloc( sizeof( mongo_host_port ) );
-}
-
-static void mongo_replset_add_node( mongo_host_port **list, const char *host, int port ) {
-    mongo_host_port *host_port = bson_malloc( sizeof( mongo_host_port ) );
-    host_port->port = port;
-    host_port->next = NULL;
-    strncpy( host_port->host, host, strlen( host ) + 1 );
-
-    if( *list == NULL )
-        *list = host_port;
-    else {
-        mongo_host_port *p = *list;
-        while( p->next != NULL )
-            p = p->next;
-        p->next = host_port;
-    }
 }
 
 static void mongo_replset_free_list( mongo_host_port **list ) {
@@ -159,80 +127,6 @@ static void mongo_replset_free_list( mongo_host_port **list ) {
     *list = NULL;
 }
 
-void mongo_replset_add_seed( mongo *conn, const char *host, int port ) {
-    mongo_replset_add_node( &conn->replset->seeds, host, port );
-}
-
-void mongo_parse_host( const char *host_string, mongo_host_port *host_port ) {
-    int len, idx, split;
-    len = split = idx = 0;
-
-    /* Split the host_port string at the ':' */
-    while( 1 ) {
-        if( *( host_string + len ) == '\0' )
-            break;
-        if( *( host_string + len ) == ':' )
-            split = len;
-
-        len++;
-    }
-
-    /* If 'split' is set, we know the that port exists;
-     * Otherwise, we set the default port. */
-    idx = split ? split : len;
-    memcpy( host_port->host, host_string, idx );
-    memcpy( host_port->host + idx, "\0", 1 );
-    if( split )
-        host_port->port = atoi( host_string + idx + 1 );
-    else
-        host_port->port = MONGO_DEFAULT_PORT;
-}
-
-static void mongo_replset_check_seed( mongo *conn ) {
-    bson out;
-    bson hosts;
-    const char *data;
-    bson_iterator it;
-    bson_iterator it_sub;
-    const char *host_string;
-    mongo_host_port *host_port = NULL;
-
-    out.data = NULL;
-
-    hosts.data = NULL;
-
-    if( mongo_simple_int_command( conn, "admin", "ismaster", 1, &out ) == MONGO_OK ) {
-
-        if( bson_find( &it, &out, "hosts" ) ) {
-            data = bson_iterator_value( &it );
-            bson_iterator_from_buffer( &it_sub, data );
-
-            /* Iterate over host list, adding each host to the
-             * connection's host list. */
-            while( bson_iterator_next( &it_sub ) ) {
-                host_string = bson_iterator_string( &it_sub );
-
-                host_port = bson_malloc( sizeof( mongo_host_port ) );
-                mongo_parse_host( host_string, host_port );
-
-                if( host_port ) {
-                    mongo_replset_add_node( &conn->replset->hosts,
-                                            host_port->host, host_port->port );
-
-                    bson_free( host_port );
-                    host_port = NULL;
-                }
-            }
-        }
-    }
-
-    bson_destroy( &out );
-    bson_destroy( &hosts );
-    mongo_close_socket( conn->sock );
-    conn->sock = 0;
-    conn->connected = 0;
-
-}
 
 /* Find out whether the current connected node is master, and
  * verify that the node's replica set name matched the provided name
