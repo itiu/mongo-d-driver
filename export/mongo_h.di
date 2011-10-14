@@ -106,7 +106,7 @@ struct mongo_reply
 }
 struct mongo_host_port
 {
-    char[255] host;
+    string host;
     int port;
     mongo_host_port* next;
 }

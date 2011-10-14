@@ -56,7 +56,6 @@ conn.lasterrstr = null;
 conn.conn_timeout_ms = 0;
 conn.op_timeout_ms = 0;
 }
-int mongo_connect(mongo* conn, char* host, int port);
 void mongo_replset_init(mongo* conn, char* name)
 {
 mongo_init(conn);
@@ -68,16 +67,7 @@ conn.replset.name = cast(char*)bson_malloc(strlen(name) + 1);
 memcpy(conn.replset.name,name,strlen(name) + 1);
 conn.primary = cast(mongo_host_port*)bson_malloc(mongo_host_port.sizeof);
 }
-static void mongo_replset_add_node(mongo_host_port** list, char* host, int port);
-
 static void mongo_replset_free_list(mongo_host_port** list);
-
-void mongo_replset_add_seed(mongo* conn, char* host, int port)
-{
-mongo_replset_add_node(&conn.replset.seeds,host,port);
-}
-void mongo_parse_host(char* host_string, mongo_host_port* host_port);
-static void mongo_replset_check_seed(mongo* conn);
 
 static int mongo_replset_check_host(mongo* conn);
 
@@ -258,12 +248,22 @@ void mongo_close_socket(Socket sock)
 {
 sock.close();
 }
-int mongo_socket_connect(mongo* conn, char* host, int port);
 int mongo_write_socket(mongo* conn, void* buf, int len);
 int mongo_read_socket(mongo* conn, void* buf, int len);
 int mongo_set_socket_op_timeout(mongo* conn, int millis)
 {
 return MONGO_OK;
 }
+int mongo_socket_connect(mongo* conn, string host, int port);
+int mongo_connect(mongo* conn, string host, int port);
 int mongo_reconnect(mongo* conn);
 void mongo_disconnect(mongo* conn);
+static void mongo_replset_add_node(mongo_host_port** list, string host, int port);
+
+void mongo_parse_host(string host_string, mongo_host_port* host_port);
+void mongo_replset_add_seed(mongo* conn, string host, int port)
+{
+mongo_replset_add_node(&conn.replset.seeds,host,port);
+}
+static void mongo_replset_check_seed(mongo* conn);
+
