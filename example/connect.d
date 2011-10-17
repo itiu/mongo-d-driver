@@ -1,3 +1,10 @@
+/*
+* make: dmd -version=D2 -Iexport libmongod-D2.a example/connect.d
+*
+* -Iexport : path to the folder containing the files: 
+*	bson.di, bson_h.di, md5.di, mongo.di, mongo_h.di, myversion.di, net.di, numbers.di
+*/
+
 module example;
 
 import std.stdio;
