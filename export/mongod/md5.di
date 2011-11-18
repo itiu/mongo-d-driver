@@ -1,5 +1,5 @@
-// D import file generated from 'src/md5.d'
-module md5;
+// D import file generated from 'src/mongod/md5.d'
+module mongod.md5;
 private import std.c.stdlib;
 
 private import std.c.string;

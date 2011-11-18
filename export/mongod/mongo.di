@@ -1,5 +1,5 @@
-// D import file generated from 'src/mongo.d'
-module mongo;
+// D import file generated from 'src/mongod/mongo.d'
+module mongod.mongo;
 private import std.c.stdlib;
 
 private import std.c.string;
@@ -10,10 +10,10 @@ private import std.c.stdio;
 
 private import std.socket;
 
-import bson_h;
-import bson;
-import mongo_h;
-import md5;
+import mongod.bson_h;
+import mongod.bson;
+import mongod.mongo_h;
+import mongod.md5;
 static int ZERO = 0;
 
 static int ONE = 1;

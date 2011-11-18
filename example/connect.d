@@ -9,10 +9,10 @@ module example;
 
 import std.stdio;
 
-private import mongo_h;
-private import mongo;
-private import bson_h;
-private import bson;
+private import mongod.mongo_h;
+private import mongod.mongo;
+private import mongod.bson_h;
+private import mongod.bson;
 
 void main(char[][] args)
 {

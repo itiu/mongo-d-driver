@@ -1,5 +1,5 @@
-// D import file generated from 'src/bson_h.d'
-module bson_h;
+// D import file generated from 'src/mongod/bson_h.d'
+module mongod.bson_h;
 alias byte int8_t;
 alias ubyte uint8_t;
 alias short int16_t;

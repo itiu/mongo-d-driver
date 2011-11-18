@@ -1,4 +1,4 @@
-module bson_h;
+module mongod.bson_h;
 
 alias byte int8_t;
 alias ubyte uint8_t;

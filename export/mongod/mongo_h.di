@@ -1,7 +1,8 @@
-// D import file generated from 'src/mongo_h.d'
-module mongo_h;
-import bson_h;
+// D import file generated from 'src/mongod/mongo_h.d'
+module mongod.mongo_h;
 private import std.socket;
+
+private import mongod.bson_h;
 
 public static string[] mongo_error_str = ["Connection success!","Could not create a socket.","An error occured while calling connect().","An error occured while calling getaddrinfo().","Warning: connected to a non-master node (read-only).","Given rs name doesn't match this replica set.","Can't find primary _in replica set. Connection closed.","An error occurred while reading or writing on socket.","The response is not the expected length.","The command returned with 'ok' value of 0.","The cursor has no more results.","The cursor has timed _out or is not recognized.","Tailable cursor still alive but no data.","BSON not valid for the specified op.","BSON object has not been finished."];
 

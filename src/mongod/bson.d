@@ -1,13 +1,13 @@
-module bson;
+module mongod.bson;
 
 private import std.c.stdlib;
 private import std.c.string;
 private import std.date;
 private import std.c.stdio;
-import std.stdarg;
+private import std.stdarg;
 
-private import bson_h;
-private import numbers;
+private import mongod.bson_h;
+private import mongod.numbers;
 
 // ++ stringz . string
 

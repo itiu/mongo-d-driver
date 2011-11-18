@@ -1,4 +1,4 @@
-module net;
+module mongod.net;
 
 private import std.stdio;
 private import std.c.string;
@@ -6,8 +6,8 @@ private import std.c.stdlib;
 private import std.socket;
 private import std.intrinsic;
 
-import mongo_h;
-import bson_h;
+import mongod.mongo_h;
+import mongod.bson_h;
 
 int send(Socket sock, void* buf, size_t len, int flags)
 {

@@ -1,8 +1,7 @@
-module mongo_h;
-
-import bson_h;
+module mongod.mongo_h;
 
 private import std.socket;
+private import mongod.bson_h;
 
 public static string mongo_error_str[] = ["Connection success!","Could not create a socket.",
                 "An error occured while calling connect().","An error occured while calling getaddrinfo().",

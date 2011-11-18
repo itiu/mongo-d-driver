@@ -1,5 +1,5 @@
-// D import file generated from 'src/bson.d'
-module bson;
+// D import file generated from 'src/mongod/bson.d'
+module mongod.bson;
 private import std.c.stdlib;
 
 private import std.c.string;
@@ -8,10 +8,11 @@ private import std.date;
 
 private import std.c.stdio;
 
-import std.stdarg;
-private import bson_h;
+private import std.stdarg;
 
-private import numbers;
+private import mongod.bson_h;
+
+private import mongod.numbers;
 
 static int _bson_append_string(bson* b, string name, string value)
 {
