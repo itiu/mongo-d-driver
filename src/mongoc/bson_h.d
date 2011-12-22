@@ -1,5 +1,7 @@
 module mongoc.bson_h;
 
+private import std.string;
+
 public static byte BSON_OK = 0;
 public static byte BSON_ERROR= -1;
 
@@ -58,13 +60,13 @@ struct bson{
     char *cur;
     int dataSize;
     bson_bool_t finished;
-    long stack[32];
+    int stack[32];
     int stackPos;
     int err; /**< Bitfield representing errors or warnings on this buffer */
     char *errstr; /**< A string representation of the most recent error or warning. */
 } ;
 
-static  int zero = 0;
+static int zero = 0;
 
 extern (C) void bson_iterator_init( bson_iterator *i,  bson *b );
 extern (C) char *bson_iterator_key( bson_iterator *i );
@@ -87,7 +89,9 @@ extern (C) void bson_append64( bson *b,  void *data );
 extern (C) int bson_ensure_space( bson *b,  int bytesNeeded );
 extern (C) int bson_check_field_name( bson *b,  char *_string, int length );
 extern (C) void bson_builder_error( bson *b );
+extern (C) int bson_append_start_object(bson* b, char* name);
 extern (C) int bson_append_finish_object( bson *b );
+extern (C) static int bson_append_estart(bson* b, int type, char* name, int dataSize);
                                                         
 
 // ++ stringz . string
@@ -99,7 +103,7 @@ static int _bson_append_string(bson* b, string name, string value)
 
 static int _bson_append_string_base(bson* b, string name, string value, bson_type type)
 {
-	int sl = (cast (int)value.length) + 1;
+	int sl = (cast (uint)value.length) + 1;
 	if(bson_check_string(b, cast(char*) value, sl - 1) == BSON_ERROR)
 		return BSON_ERROR;
 	if(_bson_append_estart(b, type, name, 4 + sl) == BSON_ERROR)
@@ -117,7 +121,7 @@ static int _bson_append_estart(bson* b, int type, string name, int dataSize)
 	if(name is null)
 		return BSON_ERROR;
 
-	int len = (cast (int)name.length) + 1;
+	int len = (cast (uint)name.length) + 1;
 	if(bson_ensure_space(b, 1 + len + dataSize) == BSON_ERROR)
 	{
 		return BSON_ERROR;
@@ -130,8 +134,8 @@ static int _bson_append_estart(bson* b, int type, string name, int dataSize)
 	}
 
 	bson_append_byte(b, cast(char) type);
-	bson_append(b, cast(char*) name, len - 1);
-	bson_append_byte(b, cast(char) 0);
+	bson_append(b, cast(char*) name, len-1);
+	bson_append_byte(b, 0);
 	return BSON_OK;
 }
 
@@ -139,7 +143,7 @@ static int _bson_append_start_array(bson* b, string name)
 {
 	if(_bson_append_estart(b, bson_type.BSON_ARRAY, name, 5) == BSON_ERROR)
 		return BSON_ERROR;
-	b.stack[b.stackPos++] = b.cur - b.data;
+	b.stack[b.stackPos++] = cast(int)(b.cur - b.data);
 	bson_append32(b, &zero);
 	return BSON_OK;
 }
@@ -156,7 +160,7 @@ static int _bson_append_start_object(bson* b, string name)
 {
 	if(_bson_append_estart(b, bson_type.BSON_OBJECT, name, 5) == BSON_ERROR)
 		return BSON_ERROR;
-	b.stack[b.stackPos++] = b.cur - b.data;
+	b.stack[b.stackPos++] = cast(int)(b.cur - b.data);
 	bson_append32(b, &zero);
 	return BSON_OK;
 }
@@ -165,11 +169,11 @@ static int _bson_append_regex(bson* b, string name, string pattern, string opts)
 {
 	int plen = 1;
 	if(pattern !is null)
-		plen = (cast(int)pattern.length) + 1;
+		plen = (cast(uint)pattern.length) + 1;
 
 	int olen = 1;
 	if(opts !is null)
-		olen = (cast(int)opts.length) + 1;
+		olen = (cast(uint)opts.length) + 1;
 
 	if(_bson_append_estart(b, bson_type.BSON_REGEX, name, plen + olen) == BSON_ERROR)
 		return BSON_ERROR;

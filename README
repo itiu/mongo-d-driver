@@ -4,6 +4,6 @@ Based on version mongo-c-driver v0.4.
 
 C driver source: https://github.com/mongodb/mongo-c-driver, commit: 1380839
 
-build with DMD 2.55
+build with DMD 2.057
 
 ValeriyBushenev@gmail.com
