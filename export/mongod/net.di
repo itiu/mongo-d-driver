@@ -8,8 +8,6 @@ private import std.c.stdlib;
 
 private import std.socket;
 
-private import std.intrinsic;
-
 import mongod.mongo_h;
 import mongod.bson_h;
 int send(Socket sock, void* buf, size_t len, int flags)

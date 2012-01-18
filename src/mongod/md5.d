@@ -64,7 +64,8 @@ module mongod.md5;
 //private import tango.core.BitManip;
 private import std.c.stdlib;
 private import std.c.string;
-private import std.intrinsic;
+//private import std.intrinsic;
+private import core.bitop;
 
 private typedef uint mongo_md5_word_t; /* 32-bit byte */
 private typedef ubyte mongo_md5_byte_t; /* 8-bit byte */

@@ -4,7 +4,7 @@ private import std.c.stdlib;
 
 private import std.c.string;
 
-private import std.intrinsic;
+private import core.bitop;
 
 private typedef uint mongo_md5_word_t;
 

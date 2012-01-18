@@ -4,7 +4,7 @@ private import std.stdio;
 private import std.c.string;
 private import std.c.stdlib;
 private import std.socket;
-private import std.intrinsic;
+//private import std.intrinsic;
 
 import mongod.mongo_h;
 import mongod.bson_h;

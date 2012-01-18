@@ -1,5 +1,7 @@
 // D import file generated from 'src/mongoc/bson_h.d'
 module mongoc.bson_h;
+private import std.string;
+
 public static byte BSON_OK = 0;
 
 
@@ -61,7 +63,7 @@ struct bson
     char* cur;
     int dataSize;
     bson_bool_t finished;
-    long[32] stack;
+    int[32] stack;
     int stackPos;
     int err;
     char* errstr;
@@ -108,7 +110,12 @@ extern (C) int bson_check_field_name(bson* b, char* _string, int length);
 
 extern (C) void bson_builder_error(bson* b);
 
+extern (C) int bson_append_start_object(bson* b, char* name);
+
 extern (C) int bson_append_finish_object(bson* b);
+
+extern (C) static int bson_append_estart(bson* b, int type, char* name, int dataSize);
+
 
 static int _bson_append_string(bson* b, string name, string value)
 {
