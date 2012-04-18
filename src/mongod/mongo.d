@@ -2,7 +2,7 @@ module mongod.mongo;
 
 private import std.c.stdlib;
 private import std.c.string;
-private import std.date;
+private import std.datetime;
 private import std.c.stdio;
 private import std.socket;
 
@@ -11,6 +11,8 @@ import mongod.bson;
 
 import mongod.mongo_h;
 import mongod.md5;
+
+import core.thread;
 
 /* mongo.c */
 
@@ -1086,7 +1088,7 @@ int mongo_read_response(mongo* conn, mongo_reply** reply, bool retry = false)
 	} catch(Exception ex)
 	{
 		printf("mongo_read_response:fail connect to mongodb, sleep 1s...\n");
-		core.thread.Thread.getThis().sleep(10_000_000);
+		Thread.getThis().sleep(10_000_000);
 		printf("reconnect to mongodb...\n");
 		if(mongo_reconnect(conn) == MONGO_OK)
 		{

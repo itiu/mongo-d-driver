@@ -4,7 +4,7 @@ private import std.c.stdlib;
 
 private import std.c.string;
 
-private import std.date;
+private import std.datetime;
 
 private import std.c.stdio;
 
@@ -14,6 +14,7 @@ import mongod.bson_h;
 import mongod.bson;
 import mongod.mongo_h;
 import mongod.md5;
+import core.thread;
 static int ZERO = 0;
 
 static int ONE = 1;
@@ -80,7 +81,25 @@ mongo_set_socket_op_timeout(conn,millis);
 return MONGO_OK;
 }
 int mongo_check_connection(mongo* conn);
-void mongo_destroy(mongo* conn);
+void mongo_destroy(mongo* conn)
+{
+mongo_disconnect(conn);
+if (conn.replset)
+{
+mongo_replset_free_list(&conn.replset.seeds);
+mongo_replset_free_list(&conn.replset.hosts);
+bson_free(conn.replset.name);
+bson_free(conn.replset);
+conn.replset = null;
+}
+bson_free(conn.primary);
+bson_free(conn.errstr);
+bson_free(conn.lasterrstr);
+conn.err = cast(mongo_error_t)0;
+conn.errstr = null;
+conn.lasterrcode = 0;
+conn.lasterrstr = null;
+}
 static int mongo_bson_valid(mongo* conn, bson* bson, int write);
 
 static int mongo_cursor_bson_valid(mongo_cursor* cursor, bson* bson);
@@ -167,7 +186,30 @@ bson_free(ns);
 return res;
 }
 int mongo_simple_int_command(mongo* conn, char* db, char* cmdstr, int arg, bson* realout);
-int mongo_simple_str_command(mongo* conn, char* db, char* cmdstr, char* arg, bson* realout);
+int mongo_simple_str_command(mongo* conn, char* db, char* cmdstr, char* arg, bson* realout)
+{
+bson _out = {null,null};
+int success = 0;
+bson cmd;
+bson_init(&cmd);
+bson_append_string(&cmd,cmdstr,arg);
+bson_finish(&cmd);
+if (mongo_run_command(conn,db,&cmd,&_out) == MONGO_OK)
+{
+bson_iterator it;
+if (bson_find(&it,&_out,cast(char*)"ok"))
+success = bson_iterator_bool(&it);
+}
+bson_destroy(&cmd);
+if (realout)
+*realout = _out;
+else
+bson_destroy(&_out);
+if (success)
+return MONGO_OK;
+else
+return MONGO_ERROR;
+}
 int mongo_cmd_drop_db(mongo* conn, char* db)
 {
 return mongo_simple_int_command(conn,db,cast(char*)"dropDatabase",1,null);
@@ -180,7 +222,37 @@ void mongo_cmd_reset_error(mongo* conn, char* db)
 {
 mongo_simple_int_command(conn,db,cast(char*)"reseterror",1,null);
 }
-static int mongo_cmd_get_error_helper(mongo* conn, char* db, bson* realout, char* cmdtype);
+static int mongo_cmd_get_error_helper(mongo* conn, char* db, bson* realout, char* cmdtype)
+{
+bson _out = {null,null};
+bson_bool_t haserror = 0;
+conn.lasterrcode = 0;
+bson_free(conn.lasterrstr);
+conn.lasterrstr = null;
+if (mongo_simple_int_command(conn,db,cmdtype,1,&_out) == MONGO_OK)
+{
+bson_iterator it;
+haserror = bson_find(&it,&_out,cast(char*)"err") != bson_type.BSON_NULL;
+if (haserror)
+{
+conn.lasterrstr = cast(char*)bson_malloc(bson_iterator_string_len(&it));
+if (conn.lasterrstr)
+{
+strcpy(conn.lasterrstr,bson_iterator_string(&it));
+}
+if (bson_find(&it,&_out,cast(char*)"code") != bson_type.BSON_NULL)
+conn.lasterrcode = bson_iterator_int(&it);
+}
+}
+if (realout)
+*realout = _out;
+else
+bson_destroy(&_out);
+if (haserror)
+return MONGO_ERROR;
+else
+return MONGO_OK;
+}
 
 int mongo_cmd_get_prev_error(mongo* conn, char* db, bson* _out)
 {
@@ -190,8 +262,37 @@ int mongo_cmd_get_last_error(mongo* conn, char* db, bson* _out)
 {
 return mongo_cmd_get_error_helper(conn,db,_out,cast(char*)"getlasterror");
 }
-bson_bool_t mongo_cmd_ismaster(mongo* conn, bson* realout);
-static void digest2hex(mongo_md5_byte_t[16] digest, char[33] hex_digest);
+bson_bool_t mongo_cmd_ismaster(mongo* conn, bson* realout)
+{
+bson _out = {null,null};
+bson_bool_t ismaster = 0;
+if (mongo_simple_int_command(conn,cast(char*)"admin",cast(char*)"ismaster",1,&_out) == MONGO_OK)
+{
+bson_iterator it;
+bson_find(&it,&_out,cast(char*)"ismaster");
+ismaster = bson_iterator_bool(&it);
+}
+if (realout)
+*realout = _out;
+else
+bson_destroy(&_out);
+return ismaster;
+}
+static void digest2hex(mongo_md5_byte_t[16] digest, char[33] hex_digest)
+{
+static char[16] hex = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'];
+int i;
+{
+for (i = 0; i < 16; i++)
+{
+{
+hex_digest[2 * i] = hex[(digest[i] & 240) >> 4];
+hex_digest[2 * i + 1] = hex[digest[i] & 15];
+}
+}
+}
+hex_digest[32] = '\x00';
+}
 
 static void mongo_pass_digest(char* user, char* pass, char[33] hex_digest)
 {
@@ -260,7 +361,21 @@ int mongo_reconnect(mongo* conn);
 void mongo_disconnect(mongo* conn);
 static void mongo_replset_add_node(mongo_host_port** list, string host, int port);
 
-void mongo_parse_host(string host_string, mongo_host_port* host_port);
+void mongo_parse_host(string host_string, mongo_host_port* host_port)
+{
+string[] host_port_s = std.string.split(host_string,":");
+if (host_port_s.length == 2)
+{
+host_port.host = host_port_s[0];
+host_port.port = atoi(cast(char*)host_port_s[1]);
+}
+else
+if (host_port_s.length == 1)
+{
+host_port.host = host_string;
+host_port.port = MONGO_DEFAULT_PORT;
+}
+}
 void mongo_replset_add_seed(mongo* conn, string host, int port)
 {
 mongo_replset_add_node(&conn.replset.seeds,host,port);

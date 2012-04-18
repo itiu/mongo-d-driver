@@ -2,7 +2,7 @@ module mongod.bson;
 
 private import std.c.stdlib;
 private import std.c.string;
-private import std.date;
+private import std.datetime;
 private import std.c.stdio;
 private import std.stdarg;
 
@@ -339,7 +339,10 @@ void bson_oid_gen( bson_oid_t *oid ) {
     static int incr = 0;
     static int fuzz = 0;
     int i;
-    int t = cast(int) toInteger(getLocalTZA());
+    
+    auto currentTime = Clock.currTime();
+
+    time_t t = currentTime.toUnixTime(); 
 
     if( oid_inc_func )
         i = oid_inc_func();

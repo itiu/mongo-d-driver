@@ -176,4 +176,23 @@ pms.abcd[2] = T_MASK ^ 1732584193;
 pms.abcd[3] = 271733878;
 }
 void mongo_md5_append(mongo_md5_state_t* pms, const mongo_md5_byte_t* data, int nbytes);
-void mongo_md5_finish(mongo_md5_state_t* pms, mongo_md5_byte_t[16] digest);
+void mongo_md5_finish(mongo_md5_state_t* pms, mongo_md5_byte_t[16] digest)
+{
+static mongo_md5_byte_t[64] pad = [128,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+mongo_md5_byte_t[8] data;
+int i;
+{
+for (i = 0; i < 8; ++i)
+{
+data[i] = cast(mongo_md5_byte_t)(pms.count[i >> 2] >> ((i & 3) << 3));
+}
+}
+mongo_md5_append(pms,pad.ptr,(55 - (pms.count[0] >> 3) & 63) + 1);
+mongo_md5_append(pms,data.ptr,8);
+{
+for (i = 0; i < 16; ++i)
+{
+digest[i] = cast(mongo_md5_byte_t)(pms.abcd[i >> 2] >> ((i & 3) << 3));
+}
+}
+}

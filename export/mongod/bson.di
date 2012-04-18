@@ -4,7 +4,7 @@ private import std.c.stdlib;
 
 private import std.c.string;
 
-private import std.date;
+private import std.datetime;
 
 private import std.c.stdio;
 
@@ -122,8 +122,33 @@ return cast(char*)b.data;
 }
 static char hexbyte(char hex);
 
-void bson_oid_from_string(bson_oid_t* oid, char* str);
-void bson_oid_to_string(bson_oid_t* oid, char* str);
+void bson_oid_from_string(bson_oid_t* oid, char* str)
+{
+int i;
+{
+for (i = 0; i < 12; i++)
+{
+{
+oid.bytes[i] = cast(char)(hexbyte(str[2 * i]) << 4) | hexbyte(str[2 * i + 1]);
+}
+}
+}
+}
+void bson_oid_to_string(bson_oid_t* oid, char* str)
+{
+static char[16] hex = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'];
+int i;
+{
+for (i = 0; i < 12; i++)
+{
+{
+str[2 * i] = hex[(oid.bytes[i] & 240) >> 4];
+str[2 * i + 1] = hex[oid.bytes[i] & 15];
+}
+}
+}
+str[24] = '\x00';
+}
 void bson_set_oid_fuzz(int function() func)
 {
 oid_fuzz_func = func;
@@ -132,7 +157,31 @@ void bson_set_oid_inc(int function() func)
 {
 oid_inc_func = func;
 }
-void bson_oid_gen(bson_oid_t* oid);
+void bson_oid_gen(bson_oid_t* oid)
+{
+static int incr = 0;
+static int fuzz = 0;
+int i;
+auto currentTime = Clock.currTime();
+time_t t = currentTime.toUnixTime();
+if (oid_inc_func)
+i = oid_inc_func();
+else
+i = incr++;
+if (!fuzz)
+{
+if (oid_fuzz_func)
+fuzz = oid_fuzz_func();
+else
+{
+srand(t);
+fuzz = rand();
+}
+}
+bson_big_endian32(&oid.ints[0],&t);
+oid.ints[1] = fuzz;
+bson_big_endian32(&oid.ints[2],&i);
+}
 time_t bson_oid_generated_time(bson_oid_t* oid)
 {
 time_t _out;
@@ -220,7 +269,19 @@ int bson_iterator_string_len(bson_iterator* i)
 return bson_iterator_int_raw(i);
 }
 char* bson_iterator_code(bson_iterator* i);
-void bson_iterator_code__scope(bson_iterator* i, bson* _scope);
+void bson_iterator_code__scope(bson_iterator* i, bson* _scope)
+{
+if (bson_iterator_type(i) == bson_type.BSON_CODEWSCOPE)
+{
+int code_len;
+bson_little_endian32(&code_len,bson_iterator_value(i) + 4);
+bson_init_data(_scope,cast(char*)(bson_iterator_value(i) + 8 + code_len));
+}
+else
+{
+bson_empty(_scope);
+}
+}
 bson_date_t bson_iterator_date(bson_iterator* i)
 {
 return bson_iterator_long_raw(i);
