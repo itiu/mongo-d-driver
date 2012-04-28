@@ -8,7 +8,7 @@ private import std.datetime;
 
 private import std.c.stdio;
 
-private import std.stdarg;
+private import core.vararg;
 
 private import mongod.bson_h;
 

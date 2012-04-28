@@ -4,7 +4,8 @@ private import std.c.stdlib;
 private import std.c.string;
 private import std.datetime;
 private import std.c.stdio;
-private import std.stdarg;
+//private import std.stdarg;
+private import core.vararg; 
 
 private import mongod.bson_h;
 private import mongod.numbers;

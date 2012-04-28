@@ -14,7 +14,6 @@ import mongod.bson_h;
 import mongod.bson;
 import mongod.mongo_h;
 import mongod.md5;
-import core.thread;
 static int ZERO = 0;
 
 static int ONE = 1;

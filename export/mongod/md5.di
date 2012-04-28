@@ -6,10 +6,8 @@ private import std.c.string;
 
 private import core.bitop;
 
-private typedef uint mongo_md5_word_t;
-
-private typedef ubyte mongo_md5_byte_t;
-
+alias uint mongo_md5_word_t;
+alias ubyte mongo_md5_byte_t;
 struct mongo_md5_state_t
 {
     mongo_md5_word_t[2] count;

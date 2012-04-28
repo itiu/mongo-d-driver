@@ -67,8 +67,8 @@ private import std.c.string;
 //private import std.intrinsic;
 private import core.bitop;
 
-private typedef uint mongo_md5_word_t; /* 32-bit byte */
-private typedef ubyte mongo_md5_byte_t; /* 8-bit byte */
+alias uint mongo_md5_word_t; /* 32-bit byte */
+alias ubyte mongo_md5_byte_t; /* 8-bit byte */
 
 /* Define the state of the MD5 Algorithm. */
 struct mongo_md5_state_t
