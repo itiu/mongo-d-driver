@@ -163,7 +163,7 @@ static int incr = 0;
 static int fuzz = 0;
 int i;
 auto currentTime = Clock.currTime();
-time_t t = currentTime.toUnixTime();
+time_t t = cast(time_t)currentTime.toUnixTime();
 if (oid_inc_func)
 i = oid_inc_func();
 else
@@ -381,15 +381,15 @@ int bson_append_undefined(bson* b, char* name);
 int bson_append_string_base(bson* b, char* name, char* value, int len, bson_type type);
 int bson_append_string(bson* b, char* name, char* value)
 {
-return bson_append_string_base(b,name,value,strlen(value),bson_type.BSON_STRING);
+return bson_append_string_base(b,name,value,cast(int)strlen(value),bson_type.BSON_STRING);
 }
 int bson_append_symbol(bson* b, char* name, char* value)
 {
-return bson_append_string_base(b,name,value,strlen(value),bson_type.BSON_SYMBOL);
+return bson_append_string_base(b,name,value,cast(int)strlen(value),bson_type.BSON_SYMBOL);
 }
 int bson_append_code(bson* b, char* name, char* value)
 {
-return bson_append_string_base(b,name,value,strlen(value),bson_type.BSON_CODE);
+return bson_append_string_base(b,name,value,cast(int)strlen(value),bson_type.BSON_CODE);
 }
 int bson_append_string_n(bson* b, char* name, char* value, int len)
 {
@@ -406,7 +406,7 @@ return bson_append_string_base(b,name,value,len,bson_type.BSON_CODE);
 int bson_append_code_w__scope_n(bson* b, char* name, char* code, int len, bson* _scope);
 int bson_append_code_w__scope(bson* b, char* name, char* code, bson* _scope)
 {
-return bson_append_code_w__scope_n(b,name,code,strlen(code),_scope);
+return bson_append_code_w__scope_n(b,name,code,cast(int)strlen(code),_scope);
 }
 int bson_append_binary(bson* b, char* name, char type, char* str, int len);
 int bson_append_oid(bson* b, char* name, bson_oid_t* oid);

@@ -63,7 +63,7 @@ conn.replset = cast(mongo_replset*)bson_malloc(mongo_replset.sizeof);
 conn.replset.primary_connected = 0;
 conn.replset.seeds = null;
 conn.replset.hosts = null;
-conn.replset.name = cast(char*)bson_malloc(strlen(name) + 1);
+conn.replset.name = cast(char*)bson_malloc(cast(int)strlen(name) + 1);
 memcpy(conn.replset.name,name,strlen(name) + 1);
 conn.primary = cast(mongo_host_port*)bson_malloc(mongo_host_port.sizeof);
 }
@@ -116,8 +116,8 @@ int mongo_find_one(mongo* conn, char* ns, bson* query, bson* fields, bson* _out)
 void mongo_cursor_init(mongo_cursor* cursor, mongo* conn, char* ns)
 {
 cursor.conn = conn;
-cursor.ns = cast(char*)bson_malloc(strlen(ns) + 1);
-strncpy(cast(char*)cursor.ns,ns,strlen(ns) + 1);
+cursor.ns = cast(char*)bson_malloc(cast(int)strlen(ns) + 1);
+strncpy(cast(char*)cursor.ns,ns,cast(int)strlen(ns) + 1);
 cursor.current.data = null;
 cursor.reply = null;
 cursor.flags = 0;
@@ -175,7 +175,7 @@ int64_t mongo_count(mongo* conn, char* db, char* ns, bson* query);
 int mongo_run_command(mongo* conn, char* db, bson* command, bson* _out)
 {
 bson fields;
-int sl = strlen(db);
+int sl = cast(int)strlen(db);
 char* ns = cast(char*)bson_malloc(sl + 5 + 1);
 int res;
 strcpy(ns,db);
@@ -298,9 +298,9 @@ static void mongo_pass_digest(char* user, char* pass, char[33] hex_digest)
 mongo_md5_state_t st;
 mongo_md5_byte_t[16] digest;
 mongo_md5_init(&st);
-mongo_md5_append(&st,cast(mongo_md5_byte_t*)user,strlen(user));
+mongo_md5_append(&st,cast(mongo_md5_byte_t*)user,cast(int)strlen(user));
 mongo_md5_append(&st,cast(mongo_md5_byte_t*)":mongo:",7);
-mongo_md5_append(&st,cast(mongo_md5_byte_t*)pass,strlen(pass));
+mongo_md5_append(&st,cast(mongo_md5_byte_t*)pass,cast(int)strlen(pass));
 mongo_md5_finish(&st,digest);
 digest2hex(digest,hex_digest);
 }
@@ -310,7 +310,7 @@ int mongo_cmd_add_user(mongo* conn, char* db, char* user, char* pass)
 bson user_obj;
 bson pass_obj;
 char[33] hex_digest;
-char* ns = cast(char*)bson_malloc(strlen(db) + strlen(cast(char*)".system.users") + 1);
+char* ns = cast(char*)bson_malloc(cast(int)strlen(db) + cast(int)strlen(cast(char*)".system.users") + 1);
 int res;
 strcpy(ns,db);
 strcpy(ns + strlen(db),cast(char*)".system.users");
@@ -335,13 +335,13 @@ int mongo_message_send(mongo* conn, mongo_message* mm, bool retry = false);
 int send(Socket sock, void* buf, size_t len, int flags)
 {
 void[] bb = buf[0..len];
-int ll = sock.send(bb);
+int ll = cast(int)sock.send(bb);
 return ll;
 }
 int recv(Socket sock, void* buf, size_t len, int flags)
 {
 void[] bb = buf[0..len];
-int ll = sock.receive(bb);
+int ll = cast(int)sock.receive(bb);
 return ll;
 }
 void mongo_close_socket(Socket sock)

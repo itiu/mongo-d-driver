@@ -12,14 +12,14 @@ import mongod.bson_h;
 int send(Socket sock, void* buf, size_t len, int flags)
 {
 	void[] bb = buf[0 .. len];
-	int ll = sock.send(bb);
+	int ll = cast(int)sock.send(bb);
 	return ll;
 }
 
 int recv(Socket sock, void* buf, size_t len, int flags)
 {
 	void[] bb = buf[0 .. len];
-	int ll = sock.receive(bb);
+	int ll = cast(int)sock.receive(bb);
 	return ll;
 }
 

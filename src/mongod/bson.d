@@ -19,7 +19,7 @@ static int _bson_append_string(bson* b, string name, string value)
 
 static int _bson_append_string_base(bson* b, string name, string value, bson_type type)
 {
-	int sl = value.length + 1;
+	int sl = cast(int)value.length + 1;
 	if(bson_check_string(b, cast(char*) value, sl - 1) == BSON_ERROR)
 		return BSON_ERROR;
 	if(_bson_append_estart(b, type, name, 4 + sl) == BSON_ERROR)
@@ -37,7 +37,7 @@ static int _bson_append_estart(bson* b, int type, string name, int dataSize)
 	if(name is null)
 		return BSON_ERROR;
 
-	int len = name.length + 1;
+	int len = cast(int)name.length + 1;
 	if(bson_ensure_space(b, 1 + len + dataSize) == BSON_ERROR)
 	{
 		return BSON_ERROR;
@@ -59,7 +59,7 @@ static int _bson_append_start_array(bson* b, string name)
 {
 	if(_bson_append_estart(b, bson_type.BSON_ARRAY, name, 5) == BSON_ERROR)
 		return BSON_ERROR;
-	b.stack[b.stackPos++] = b.cur - b.data;
+	b.stack[b.stackPos++] = cast(int)(b.cur - b.data);
 	bson_append32(b, &zero);
 	return BSON_OK;
 }
@@ -76,7 +76,7 @@ static int _bson_append_start_object(bson* b, string name)
 {
 	if(_bson_append_estart(b, bson_type.BSON_OBJECT, name, 5) == BSON_ERROR)
 		return BSON_ERROR;
-	b.stack[b.stackPos++] = b.cur - b.data;
+	b.stack[b.stackPos++] = cast(int)(b.cur - b.data);
 	bson_append32(b, &zero);
 	return BSON_OK;
 }
@@ -85,11 +85,11 @@ static int _bson_append_regex(bson* b, string name, string pattern, string opts)
 {
 	int plen = 1;
 	if(pattern !is null)
-		plen = pattern.length + 1;
+		plen = cast(int)pattern.length + 1;
 
 	int olen = 1;
 	if(opts !is null)
-		olen = opts.length + 1;
+		olen = cast(int)opts.length + 1;
 
 	if(_bson_append_estart(b, bson_type.BSON_REGEX, name, plen + olen) == BSON_ERROR)
 		return BSON_ERROR;
@@ -343,7 +343,7 @@ void bson_oid_gen( bson_oid_t *oid ) {
     
     auto currentTime = Clock.currTime();
 
-    time_t t = currentTime.toUnixTime(); 
+    time_t t = cast(time_t)currentTime.toUnixTime(); 
 
     if( oid_inc_func )
         i = oid_inc_func();
@@ -535,7 +535,7 @@ bson_type bson_iterator_next( bson_iterator *i ) {
         char *p = s;
         p += strlen( p )+1;
         p += strlen( p )+1;
-        ds = p-s;
+        ds = cast(int)(p-s);
         break;
     }
 
@@ -775,7 +775,7 @@ void bson_append64( bson *b,  void *data ) {
 }
 
 int bson_ensure_space( bson *b,  int bytesNeeded ) {
-    int pos = b.cur - b.data;
+    int pos = cast(int)(b.cur - b.data);
     char *orig = b.data;
     int new_size;
 
@@ -812,7 +812,7 @@ int bson_finish( bson *b ) {
     if ( ! b.finished ) {
         if ( bson_ensure_space( b, 1 ) == BSON_ERROR ) return BSON_ERROR;
         bson_append_byte( b, 0 );
-        i = b.cur - b.data;
+        i = cast(int)(b.cur - b.data);
         bson_little_endian32( b.data, &i );
         b.finished = 1;
     }
@@ -829,7 +829,7 @@ void bson_destroy( bson *b ) {
 }
 
 static int bson_append_estart( bson *b, int type,  char *name,  int dataSize ) {
-     int len = strlen( name ) + 1;
+     int len = cast(int)(strlen( name ) + 1);
 
     if ( b.finished ) {
         b.err |= BSON_ALREADY_FINISHED;
@@ -910,15 +910,15 @@ int bson_append_string_base( bson *b,  char *name,
 }
 
 int bson_append_string( bson *b,  char *name,  char *value ) {
-    return bson_append_string_base( b, name, value, strlen ( value ), bson_type.BSON_STRING );
+    return bson_append_string_base( b, name, value, cast(int)strlen ( value ), bson_type.BSON_STRING );
 }
 
 int bson_append_symbol( bson *b,  char *name,  char *value ) {
-    return bson_append_string_base( b, name, value, strlen ( value ), bson_type.BSON_SYMBOL );
+    return bson_append_string_base( b, name, value, cast(int)strlen ( value ), bson_type.BSON_SYMBOL );
 }
 
 int bson_append_code( bson *b,  char *name,  char *value ) {
-    return bson_append_string_base( b, name, value, strlen ( value ), bson_type.BSON_CODE );
+    return bson_append_string_base( b, name, value,  cast(int)strlen ( value ), bson_type.BSON_CODE );
 }
 
 int bson_append_string_n( bson *b,  char *name,  char *value, int len ) {
@@ -948,7 +948,7 @@ int bson_append_code_w__scope_n( bson *b,  char *name,
 }
 
 int bson_append_code_w__scope( bson *b,  char *name,  char *code,  bson *_scope ) {
-    return bson_append_code_w__scope_n( b, name, code, strlen ( code ), _scope );
+    return bson_append_code_w__scope_n( b, name, code, cast(int)strlen ( code ), _scope );
 }
 
 int bson_append_binary( bson *b,  char *name, char type,  char *str, int len ) {
@@ -984,8 +984,8 @@ int bson_append_new_oid( bson *b,  char *name ) {
 }
 
 int bson_append_regex( bson *b,  char *name,  char *pattern,  char *opts ) {
-     int plen = strlen( pattern )+1;
-     int olen = strlen( opts )+1;
+     int plen = cast(int)strlen( pattern )+1;
+     int olen = cast(int)strlen( opts )+1;
     if ( bson_append_estart( b, bson_type.BSON_REGEX, name, plen + olen ) == BSON_ERROR )
         return BSON_ERROR;
     if ( bson_check_string( b, pattern, plen - 1 ) == BSON_ERROR )
@@ -1007,14 +1007,14 @@ int bson_append_element( bson *b,  char *name_or_null,  bson_iterator *elem ) {
     int size;
 
     bson_iterator_next( &next );
-    size = next.cur - elem.cur;
+    size = cast(int)(next.cur - elem.cur);
 
     if ( name_or_null == null ) {
         if( bson_ensure_space( b, size ) == BSON_ERROR )
             return BSON_ERROR;
         bson_append( b, elem.cur, size );
     } else {
-        int data_size = size - 2 - strlen( bson_iterator_key( elem ) );
+        int data_size = cast(int)(size - 2 - strlen( bson_iterator_key( elem ) ));
         bson_append_estart( b, elem.cur[0], name_or_null, data_size );
         bson_append( b, bson_iterator_value( elem ), data_size );
     }
@@ -1043,14 +1043,14 @@ int bson_append_time_t( bson *b,  char *name, time_t secs ) {
 
 int bson_append_start_object( bson *b,  char *name ) {
     if ( bson_append_estart( b, bson_type.BSON_OBJECT, name, 5 ) == BSON_ERROR ) return BSON_ERROR;
-    b.stack[ b.stackPos++ ] = b.cur - b.data;
+    b.stack[ b.stackPos++ ] = cast(int)(b.cur - b.data);
     bson_append32( b , &zero );
     return BSON_OK;
 }
 
 int bson_append_start_array( bson *b,  char *name ) {
     if ( bson_append_estart( b, bson_type.BSON_ARRAY, name, 5 ) == BSON_ERROR ) return BSON_ERROR;
-    b.stack[ b.stackPos++ ] = b.cur - b.data;
+    b.stack[ b.stackPos++ ] = cast(int)(b.cur - b.data);
     bson_append32( b , &zero );
     return BSON_OK;
 }
@@ -1062,7 +1062,7 @@ int bson_append_finish_object( bson *b ) {
     bson_append_byte( b , 0 );
 
     start = b.data + b.stack[ --b.stackPos ];
-    i = b.cur - start;
+    i = cast(int)(b.cur - start);
     bson_little_endian32( start, &i );
 
     return BSON_OK;

@@ -124,7 +124,7 @@ void mongo_replset_init( mongo *conn,  char *name ) {
     conn.replset.primary_connected = 0;
     conn.replset.seeds = null;
     conn.replset.hosts = null;
-    conn.replset.name = cast( char * )bson_malloc( strlen( name ) + 1 );
+    conn.replset.name = cast( char * )bson_malloc( cast(int)strlen( name ) + 1 );
     memcpy( conn.replset.name, name, strlen( name ) + 1  );
 
     conn.primary = cast (mongo_host_port *)bson_malloc( mongo_host_port.sizeof );
@@ -328,7 +328,7 @@ static int mongo_cursor_bson_valid( mongo_cursor *cursor, bson *bson ) {
 int mongo_insert_batch( mongo *conn,  char *ns,
                         bson **bsons, int count ) {
 
-    int size =  16 + 4 + strlen( ns ) + 1;
+    int size =  16 + 4 + cast(int)strlen( ns ) + 1;
     int i;
     mongo_message *mm;
     char *data;
@@ -343,7 +343,7 @@ int mongo_insert_batch( mongo *conn,  char *ns,
 
     data = &mm.data;
     data = mongo_data_append32( data, &ZERO );
-    data = mongo_data_append( data, ns, strlen( ns ) + 1 );
+    data = mongo_data_append( data, ns, cast(int)strlen( ns ) + 1 );
 
     for( i=0; i<count; i++ ) {
         data = mongo_data_append( data, bsons[i].data, bson_size( bsons[i] ) );
@@ -364,13 +364,13 @@ int mongo_insert( mongo *conn ,  char *ns , bson *bson ) {
 
     mm = mongo_message_create( 16 /* header */
                                + 4 /* ZERO */
-                               + strlen( ns )
+                               + cast(int)strlen( ns )
                                + 1 + bson_size( bson )
                                , 0, 0, MONGO_OP_INSERT );
 
     data = &mm.data;
     data = mongo_data_append32( data, &ZERO );
-    data = mongo_data_append( data, ns, strlen( ns ) + 1 );
+    data = mongo_data_append( data, ns, cast(int)strlen( ns ) + 1 );
     data = mongo_data_append( data, bson.data, bson_size( bson ) );
 
     return mongo_message_send( conn, mm );
@@ -391,7 +391,7 @@ int mongo_update( mongo *conn,  char *ns,  bson *cond,
 
     mm = mongo_message_create( 16 /* header */
                                + 4  /* ZERO */
-                               + strlen( ns ) + 1
+                               + cast(int)strlen( ns ) + 1
                                + 4  /* flags */
                                + bson_size( cond )
                                + bson_size( op )
@@ -399,7 +399,7 @@ int mongo_update( mongo *conn,  char *ns,  bson *cond,
 
     data = &mm.data;
     data = mongo_data_append32( data, &ZERO );
-    data = mongo_data_append( data, ns, strlen( ns ) + 1 );
+    data = mongo_data_append( data, ns, cast(int)strlen( ns ) + 1 );
     data = mongo_data_append32( data, &flags );
     data = mongo_data_append( data, cond.data, bson_size( cond ) );
     data = mongo_data_append( data, op.data, bson_size( op ) );
@@ -419,14 +419,14 @@ int mongo_remove( mongo *conn,  char *ns,  bson *cond ) {
 
     mongo_message *mm = mongo_message_create( 16  /* header */
                         + 4  /* ZERO */
-                        + strlen( ns ) + 1
+                        + cast(int)strlen( ns ) + 1
                         + 4  /* ZERO */
                         + bson_size( cond )
                         , 0 , 0 , MONGO_OP_DELETE );
 
     data = &mm.data;
     data = mongo_data_append32( data, &ZERO );
-    data = mongo_data_append( data, ns, strlen( ns ) + 1 );
+    data = mongo_data_append( data, ns, cast(int)strlen( ns ) + 1 );
     data = mongo_data_append32( data, &ZERO );
     data = mongo_data_append( data, cond.data, bson_size( cond ) );
 
@@ -453,7 +453,7 @@ static int mongo_cursor_op_query( mongo_cursor *cursor ) {
 
     mm = mongo_message_create( 16 + /* header */
                                4 + /*  options */
-                               strlen( cursor.ns ) + 1 + /* ns */
+                               cast(int)strlen( cursor.ns ) + 1 + /* ns */
                                4 + 4 + /* skip,return */
                                bson_size( cursor.query ) +
                                bson_size( cursor.fields ) ,
@@ -461,7 +461,7 @@ static int mongo_cursor_op_query( mongo_cursor *cursor ) {
 
     data = &mm.data;
     data = mongo_data_append32( data , &cursor.options );
-    data = mongo_data_append( data , cursor.ns , strlen( cursor.ns ) + 1 );
+    data = mongo_data_append( data , cursor.ns , cast(int)strlen( cursor.ns ) + 1 );
     data = mongo_data_append32( data , &cursor.skip );
     data = mongo_data_append32( data , &cursor.limit );
     data = mongo_data_append( data , cursor.query.data , bson_size( cursor.query ) );
@@ -499,7 +499,7 @@ static int mongo_cursor_get_more( mongo_cursor *cursor ) {
         return MONGO_ERROR;
     } else {
         char *data;
-        int sl = strlen( cursor.ns )+1;
+        int sl = cast(int)strlen( cursor.ns )+1;
         int limit = 0;
         mongo_message *mm;
 
@@ -575,8 +575,8 @@ int mongo_find_one( mongo *conn,  char *ns, bson *query,
 
 void mongo_cursor_init( mongo_cursor *cursor, mongo *conn,  char *ns ) {
     cursor.conn = conn;
-    cursor.ns = cast(  char * )bson_malloc( strlen( ns ) + 1 );
-    strncpy( cast( char * )cursor.ns, ns, strlen( ns ) + 1 );
+    cursor.ns = cast(  char * )bson_malloc( cast(int)strlen( ns ) + 1 );
+    strncpy( cast( char * )cursor.ns, ns, cast(int)strlen( ns ) + 1 );
     cursor.current.data = null;
     cursor.reply = null;
     cursor.flags = 0;
@@ -780,7 +780,7 @@ int mongo_run_command( mongo *conn,  char *db, bson *command,
                        bson *_out ) {
 
     bson fields;
-    int sl = strlen( db );
+    int sl = cast(int)strlen( db );
     char *ns = cast(char*)bson_malloc( sl + 5 + 1 ); /* ".$cmd" + nul */
     int res;
 
@@ -944,9 +944,9 @@ static void mongo_pass_digest(  char *user,  char *pass, char hex_digest[33] ) {
     mongo_md5_byte_t digest[16];
 
     mongo_md5_init( &st );
-    mongo_md5_append( &st, cast(  mongo_md5_byte_t * )user, strlen( user ) );
+    mongo_md5_append( &st, cast(  mongo_md5_byte_t * )user, cast(int)strlen( user ) );
     mongo_md5_append( &st, cast(  mongo_md5_byte_t * )":mongo:", 7 );
-    mongo_md5_append( &st, cast(  mongo_md5_byte_t * )pass, strlen( pass ) );
+    mongo_md5_append( &st, cast(  mongo_md5_byte_t * )pass, cast(int)strlen( pass ) );
     mongo_md5_finish( &st, digest );
     digest2hex( digest, hex_digest );
 }
@@ -955,7 +955,7 @@ int mongo_cmd_add_user( mongo *conn,  char *db,  char *user,  char *pass ) {
     bson user_obj;
     bson pass_obj;
     char hex_digest[33];
-    char *ns = cast(char*)bson_malloc( strlen( db ) + strlen( cast(char*) ".system.users" ) + 1 );
+    char *ns = cast(char*)bson_malloc( cast(int)strlen( db ) + cast(int)strlen( cast(char*) ".system.users" ) + 1 );
     int res;
 
     strcpy( ns, db );
@@ -1004,8 +1004,8 @@ bson_bool_t mongo_cmd_authenticate( mongo *conn,  char *db,  char *user,  char *
     mongo_pass_digest( user, pass, hex_digest );
 
     mongo_md5_init( &st );
-    mongo_md5_append( &st, cast(  mongo_md5_byte_t * )nonce, strlen( nonce ) );
-    mongo_md5_append( &st, cast(  mongo_md5_byte_t * )user, strlen( user ) );
+    mongo_md5_append( &st, cast(  mongo_md5_byte_t * )nonce, cast(int)strlen( nonce ) );
+    mongo_md5_append( &st, cast(  mongo_md5_byte_t * )user, cast(int)strlen( user ) );
     mongo_md5_append( &st, cast(  mongo_md5_byte_t * )hex_digest, 32 );
     mongo_md5_finish( &st, digest );
     digest2hex( digest, hex_digest );
@@ -1076,7 +1076,7 @@ int mongo_read_response(mongo* conn, mongo_reply** reply, bool retry = false)
 		bson_little_endian32(&_out.fields.start, &fields.start);
 		bson_little_endian32(&_out.fields.num, &fields.num);
 
-		res = mongo_read_socket(conn, &_out.objs, len - head.sizeof - fields.sizeof);
+		res = mongo_read_socket(conn, &_out.objs, len - cast(int)head.sizeof - cast(int)fields.sizeof);
 		if(res != MONGO_OK)
 		{
 			throw new Exception("io _in mongo_read_socket, phase 3");
@@ -1136,7 +1136,7 @@ int mongo_message_send(mongo* conn, mongo_message* mm, bool retry = false)
 			throw new Exception("io _in mongo_write_socket, phase 1");
 		}
 
-		res = mongo_write_socket(conn, &mm.data, mm.head.len - head.sizeof);
+		res = mongo_write_socket(conn, &mm.data, mm.head.len - cast(int)head.sizeof);
 		if(res != MONGO_OK)
 		{
 			throw new Exception("io _in mongo_write_socket, phase 2");
@@ -1176,14 +1176,14 @@ int mongo_message_send(mongo* conn, mongo_message* mm, bool retry = false)
 int send(Socket sock, void* buf, size_t len, int flags)
 {
 	void[] bb = buf[0 .. len];
-	int ll = sock.send(bb);
+	int ll = cast(int)sock.send(bb);
 	return ll;
 }
 
 int recv(Socket sock, void* buf, size_t len, int flags)
 {
 	void[] bb = buf[0 .. len];
-	int ll = sock.receive(bb);
+	int ll = cast(int)sock.receive(bb);
 	return ll;
 }
 
