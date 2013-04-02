@@ -1,6 +1,8 @@
 module mongoc.bson_h;
 
 private import std.string;
+private import std.datetime;
+private import std.stdio;
 
 public static byte BSON_OK = 0;
 public static byte BSON_ERROR= -1;
@@ -92,13 +94,62 @@ extern (C) void bson_builder_error( bson *b );
 extern (C) int bson_append_start_object(bson* b, char* name);
 extern (C) int bson_append_finish_object( bson *b );
 extern (C) static int bson_append_estart(bson* b, int type, char* name, int dataSize);
-                                                        
+
+/* these both append a bson_date */
+/**
+ * Append a bson_date_t value to a bson.
+ *
+ * @param b the bson to append to.
+ * @param name the key for the date value.
+ * @param millis the bson_date_t to append.
+ *
+ * @return BSON_OK or BSON_ERROR.
+ */
+extern (C) int bson_append_date(bson *b, const char *name, bson_date_t millis);                                                        
+
+alias long int64_t;
+alias ulong uint64_t;
+
+alias int64_t bson_date_t; /* milliseconds since epoch UTC */
+
+int _bson_append_date(bson *b, string name, bson_date_t millis) 
+{
+    if (_bson_append_estart(b, bson_type.BSON_DATE, name, 8) == BSON_ERROR ) return BSON_ERROR;
+    bson_append64(b, &millis);
+    return BSON_OK;
+}
 
 // ++ stringz . string
-
 static int _bson_append_string(bson* b, string name, string value)
 {
-	return _bson_append_string_base(b, name, value, bson_type.BSON_STRING);
+	if (
+	    (value.length == 24 && value[4] == '-' && value[7] == '-' && value[10] == 'T' && value[13] == ':' && value[16] == ':' && value[19] == '.' && value[23] == 'Z') ||
+	    (value.length == 19 && value[4] == '-' && value[7] == '-' && value[10] == 'T' && value[13] == ':' && value[16] == ':')
+	   )
+	{
+	    // строки содержащие дату в виде 2013-03-28T06:51:55.990Z или 2013-03-28T06:51:55, автоматически преобразуем в дату для mongo
+
+	    char[] ttt = (cast(char[])value);
+
+	    SysTime st;
+
+	    if (ttt.length == 24)
+	    {
+		ttt.length = 23;
+		st = SysTime.fromISOExtString(ttt~"+0");
+	    }
+	    if (ttt.length == 19)
+	    {
+		st = SysTime.fromISOExtString(ttt~".000+0");
+	    }
+
+	    long ll = (st.stdTime() - 621355968000000000)/10000;
+	    return _bson_append_date(b, name, ll);  
+	}
+        else
+	{
+	    return _bson_append_string_base(b, name, value, bson_type.BSON_STRING);
+	}
 }
 
 static int _bson_append_string_base(bson* b, string name, string value, bson_type type)
