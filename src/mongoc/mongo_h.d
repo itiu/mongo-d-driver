@@ -1,6 +1,6 @@
-module mongoc.mongo_h;
+module bind.mongoc.mongo_h;
 
-private import mongoc.bson_h;
+private import bind.mongoc.bson_h;
 
 public static string mongo_error_str[] = ["Connection success!","Could not create a socket.",
                 "An error occured while calling connect().","An error occured while calling getaddrinfo().",
@@ -108,13 +108,12 @@ struct mongo_cursor{
     int skip;          /**< Bitfield containing cursor options. */
 } ;
 
+//extern (C) int mongo_client( mongo *conn , char *host, int port );
 
 extern (C) mongo_error_t mongo_get_error( mongo *conn );
 
 extern (C) int mongo_cursor_destroy( mongo_cursor *cursor );
 extern (C) int mongo_cursor_next( mongo_cursor *cursor );
-extern (C) bson_type bson_iterator_next( bson_iterator *i );
-extern (C) bson_type bson_iterator_type( bson_iterator *i );
 extern (C) int mongo_connect(mongo* conn, char* host, int port);
 extern (C) int mongo_set_op_timeout( mongo *conn, int millis );
 extern (C) int mongo_remove( mongo *conn,  char *ns,  bson *cond );

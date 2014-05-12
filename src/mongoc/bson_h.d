@@ -1,4 +1,4 @@
-module mongoc.bson_h;
+module bind.mongoc.bson_h;
 
 private import std.string;
 private import std.datetime;
@@ -74,6 +74,7 @@ extern (C) void bson_iterator_init( bson_iterator *i,  bson *b );
 extern (C) char *bson_iterator_key( bson_iterator *i );
 extern (C) char *bson_iterator_value( bson_iterator *i );
 extern (C) char *bson_iterator_string( bson_iterator *i );
+extern (C) bson_date_t bson_iterator_date( bson_iterator *i );
 extern (C) int bson_iterator_int( bson_iterator *i );
 extern (C) double bson_iterator_double( bson_iterator *i );
 extern (C) bson_bool_t bson_iterator_bool( bson_iterator *i );
@@ -91,6 +92,7 @@ extern (C) void bson_append64( bson *b,  void *data );
 extern (C) int bson_ensure_space( bson *b,  int bytesNeeded );
 extern (C) int bson_check_field_name( bson *b,  char *_string, int length );
 extern (C) void bson_builder_error( bson *b );
+extern (C) int bson_append_bson( bson *b, char* name, bson *bson);
 extern (C) int bson_append_start_object(bson* b, char* name);
 extern (C) int bson_append_finish_object( bson *b );
 extern (C) static int bson_append_estart(bson* b, int type, char* name, int dataSize);
@@ -124,7 +126,8 @@ static int _bson_append_string(bson* b, string name, string value)
 {
 	if (
 	    (value.length == 24 && value[4] == '-' && value[7] == '-' && value[10] == 'T' && value[13] == ':' && value[16] == ':' && value[19] == '.' && value[23] == 'Z') ||
-	    (value.length == 19 && value[4] == '-' && value[7] == '-' && value[10] == 'T' && value[13] == ':' && value[16] == ':')
+	    (value.length == 19 && value[4] == '-' && value[7] == '-' && value[10] == 'T' && value[13] == ':' && value[16] == ':') ||
+	    (value.length == 28 && value[4] == '-' && value[7] == '-' && value[10] == 'T' && value[13] == ':' && value[16] == ':' && value[19] == '.' && value[23] == '+')
 	   )
 	{
 	    // строки содержащие дату в виде 2013-03-28T06:51:55.990Z или 2013-03-28T06:51:55, автоматически преобразуем в дату для mongo
@@ -137,8 +140,11 @@ static int _bson_append_string(bson* b, string name, string value)
 	    {
 		ttt.length = 23;
 		st = SysTime.fromISOExtString(ttt~"+0");
-	    }
-	    if (ttt.length == 19)
+	    } else if (ttt.length == 28)
+	    {
+		ttt.length = 23;
+		st = SysTime.fromISOExtString(ttt~"+0");
+	    } else if (ttt.length == 19)
 	    {
 		st = SysTime.fromISOExtString(ttt~".000+0");
 	    }
@@ -240,3 +246,6 @@ static int _bson_append_regex(bson* b, string name, string pattern, string opts)
 	return BSON_OK;
 }
 
+
+extern (C) bson_type bson_iterator_next( bson_iterator *i );
+extern (C) bson_type bson_iterator_type( bson_iterator *i );
